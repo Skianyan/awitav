@@ -142,11 +142,23 @@ const closeAlertsModal = () => {
               <td>{{ formatRelativeTime(sensor.lastReadingAt) }}</td>
               <td>
                 <div class="table-actions">
-                  <button class="button button--small button--secondary" type="button" @click="editSettings(sensor)">
-                    Editar
+                  <button
+                    class="button button--small button--ghost"
+                    type="button"
+                    aria-label="Editar configuracion"
+                    title="Editar configuracion"
+                    @click="editSettings(sensor)"
+                  >
+                    &#9881;
                   </button>
-                  <button class="button button--small button--ghost" type="button" @click="editAlerts(sensor)">
-                    Alertas
+                  <button
+                    class="button button--small button--ghost"
+                    type="button"
+                    aria-label="Configurar alertas"
+                    title="Configurar alertas"
+                    @click="editAlerts(sensor)"
+                  >
+                    &#128276;
                   </button>
                 </div>
               </td>

@@ -275,6 +275,12 @@ input {
   gap: 0.5rem;
 }
 
+.sidebar__nav--secondary {
+  margin-top: 1.25rem;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.12);
+}
+
 .sidebar__link {
   display: flex;
   align-items: center;
@@ -282,6 +288,18 @@ input {
   padding: 0.85rem 0.9rem;
   border-radius: 0.9rem;
   color: #c9d6e0;
+}
+
+.sidebar__link-main {
+  display: inline-flex;
+  gap: 0.6rem;
+  align-items: center;
+}
+
+.sidebar__link-icon {
+  display: grid;
+  width: 1.35rem;
+  place-items: center;
 }
 
 .sidebar__link:hover,
@@ -302,14 +320,115 @@ input {
 }
 
 .sidebar__user {
-  display: grid;
-  gap: 0.7rem;
-  padding: 1rem;
+  position: relative;
+  padding: 0.35rem;
   border-radius: 1rem;
   background: rgba(255, 255, 255, 0.08);
 }
 
 .sidebar__user strong {
+  overflow-wrap: anywhere;
+}
+
+.sidebar__user-trigger {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: 0.7rem;
+  align-items: center;
+  width: 100%;
+  padding: 0.65rem;
+  border: 0;
+  border-radius: 0.8rem;
+  color: inherit;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sidebar__user-trigger:hover {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.sidebar__user-icon,
+.sidebar__user-ellipsis {
+  display: grid;
+  width: 1.8rem;
+  height: 1.8rem;
+  place-items: center;
+  border-radius: 999px;
+  font-size: 1rem;
+  background: rgba(255, 255, 255, 0.14);
+}
+
+.sidebar__user-meta {
+  display: grid;
+  min-width: 0;
+  gap: 0.12rem;
+}
+
+.sidebar__user-meta strong {
+  color: #ffffff;
+  font-size: 0.92rem;
+}
+
+.sidebar__user-meta span {
+  overflow: hidden;
+  color: #9db1c2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.78rem;
+}
+
+.sidebar__user-menu {
+  position: absolute;
+  right: 0.35rem;
+  bottom: calc(100% + 0.35rem);
+  z-index: 5;
+  display: grid;
+  width: 12rem;
+  padding: 0.35rem;
+  border: 1px solid rgba(129, 165, 184, 0.28);
+  border-radius: 0.8rem;
+  background: #ffffff;
+  box-shadow: 0 12px 28px rgba(11, 23, 38, 0.24);
+}
+
+.sidebar__user-menu-item {
+  min-height: 2.2rem;
+  padding: 0.45rem 0.65rem;
+  border: 0;
+  border-radius: 0.6rem;
+  color: #122033;
+  text-align: left;
+  background: transparent;
+  cursor: pointer;
+}
+
+.sidebar__user-menu-item:hover {
+  background: #edf5f8;
+}
+
+.account-info {
+  display: grid;
+  gap: 0.7rem;
+  margin: 0 0 1rem;
+}
+
+.account-info div {
+  display: grid;
+  gap: 0.2rem;
+}
+
+.account-info dt {
+  color: #647589;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.account-info dd {
+  margin: 0;
+  color: #122033;
+  font-weight: 700;
   overflow-wrap: anywhere;
 }
 
@@ -421,6 +540,100 @@ input {
   gap: 0.75rem;
 }
 
+.reading-chart {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.chart-range-select {
+  display: grid;
+  gap: 0.35rem;
+  color: #355064;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.chart-range-select select {
+  min-height: 2.25rem;
+  padding: 0.4rem 2rem 0.4rem 0.8rem;
+  border: 1px solid #cbdce5;
+  border-radius: 0.8rem;
+  color: #122033;
+  background: #ffffff;
+}
+
+.reading-chart svg {
+  width: 100%;
+  min-height: 17rem;
+  border: 1px solid #e4edf2;
+  border-radius: 1rem;
+  background: linear-gradient(180deg, #f8fdff, #f2f8fb);
+}
+
+.reading-chart__grid {
+  stroke: #dbe8ef;
+  stroke-width: 1;
+  stroke-dasharray: 4 5;
+}
+
+.reading-chart__line {
+  fill: none;
+  stroke: #1596bc;
+  stroke-width: 3;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.reading-chart__point {
+  fill: #ffffff;
+  stroke: #1596bc;
+  stroke-width: 2.5;
+}
+
+.reading-chart__value {
+  fill: #355064;
+  font-size: 0.78rem;
+  font-weight: 700;
+  text-anchor: middle;
+}
+
+.reading-chart__axis-value {
+  fill: #647589;
+  font-size: 0.74rem;
+  text-anchor: end;
+}
+
+.reading-chart__axis-title {
+  fill: #355064;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.reading-chart__labels {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+  color: #647589;
+  font-size: 0.78rem;
+}
+
+.reading-chart__labels span {
+  text-align: center;
+}
+
+.reading-chart__empty {
+  margin: 0;
+  color: #647589;
+}
+
+.reading-chart__x-title {
+  margin: 0;
+  color: #355064;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+}
+
 .reading-row {
   padding: 0.95rem 0;
   border-bottom: 1px solid #e4edf2;
@@ -460,7 +673,7 @@ input {
 .form-actions,
 .table-actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: row;
   gap: 0.6rem;
 }
 
