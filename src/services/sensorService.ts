@@ -1,18 +1,19 @@
 import type {
-  NewSensorInput,
   Notification,
   Reading,
+  RegisterSensorInput,
   Sensor,
   SensorAlertsInput,
   SensorSettingsInput,
 } from '@/types'
+import { assertValidSensorId, assertValidSensorSettings } from '@/utils/sensorValidation'
 
 const now = new Date()
 const minutesAgo = (minutes: number) => new Date(now.getTime() - minutes * 60_000).toISOString()
 
-let sensors: Sensor[] = [
+let adminSensors: Sensor[] = [
   {
-    id: 'AWT-001',
+    id: 'TINC01',
     name: 'Tinaco principal',
     status: 'online',
     maxCapacityLiters: 1100,
@@ -29,7 +30,7 @@ let sensors: Sensor[] = [
     },
   },
   {
-    id: 'AWT-002',
+    id: 'TINC02',
     name: 'Tinaco azotea',
     status: 'warning',
     maxCapacityLiters: 750,
@@ -46,7 +47,7 @@ let sensors: Sensor[] = [
     },
   },
   {
-    id: 'AWT-003',
+    id: 'TINC03',
     name: 'Reserva patio',
     status: 'offline',
     maxCapacityLiters: 450,
@@ -62,15 +63,35 @@ let sensors: Sensor[] = [
       lowWaterThresholdPercent: 20,
     },
   },
+  {
+    id: 'TINC04',
+    name: 'Tinaco lavandería',
+    status: 'online',
+    maxCapacityLiters: 600,
+    tankHeightCm: 110,
+    waterDistanceCm: 44,
+    currentLiters: 360,
+    measurementIntervalMinutes: 20,
+    lastReadingPercent: 60,
+    lastReadingAt: minutesAgo(12),
+    alerts: {
+      disconnect: true,
+      lowWater: true,
+      lowWaterThresholdPercent: 25,
+    },
+  },
 ]
 
+let registeredSensorIds = ['TINC01', 'TINC02', 'TINC03']
+
 let readings: Reading[] = [
-  { id: 'R-001', sensorId: 'AWT-001', percentage: 75, liters: 825, measuredAt: minutesAgo(7) },
-  { id: 'R-002', sensorId: 'AWT-001', percentage: 72, liters: 792, measuredAt: minutesAgo(22) },
-  { id: 'R-003', sensorId: 'AWT-001', percentage: 69, liters: 759, measuredAt: minutesAgo(37) },
-  { id: 'R-004', sensorId: 'AWT-002', percentage: 28, liters: 210, measuredAt: minutesAgo(18) },
-  { id: 'R-005', sensorId: 'AWT-002', percentage: 32, liters: 240, measuredAt: minutesAgo(28) },
-  { id: 'R-006', sensorId: 'AWT-003', percentage: 0, liters: 0, measuredAt: minutesAgo(184) },
+  { id: 'R-001', sensorId: 'TINC01', percentage: 75, liters: 825, measuredAt: minutesAgo(7) },
+  { id: 'R-002', sensorId: 'TINC01', percentage: 72, liters: 792, measuredAt: minutesAgo(22) },
+  { id: 'R-003', sensorId: 'TINC01', percentage: 69, liters: 759, measuredAt: minutesAgo(37) },
+  { id: 'R-004', sensorId: 'TINC02', percentage: 28, liters: 210, measuredAt: minutesAgo(18) },
+  { id: 'R-005', sensorId: 'TINC02', percentage: 32, liters: 240, measuredAt: minutesAgo(28) },
+  { id: 'R-006', sensorId: 'TINC03', percentage: 0, liters: 0, measuredAt: minutesAgo(184) },
+  { id: 'R-007', sensorId: 'TINC04', percentage: 60, liters: 360, measuredAt: minutesAgo(12) },
 ]
 
 const notifications: Notification[] = [
@@ -92,7 +113,7 @@ const notifications: Notification[] = [
 
 export const sensorService = {
   async getSensors(): Promise<Sensor[]> {
-    return [...sensors]
+    return adminSensors.filter((sensor) => registeredSensorIds.includes(sensor.id))
   },
 
   async getReadings(): Promise<Reading[]> {
@@ -103,47 +124,44 @@ export const sensorService = {
     return [...notifications]
   },
 
-  async createSensor(input: NewSensorInput): Promise<Sensor> {
-    const id = `AWT-${String(sensors.length + 1).padStart(3, '0')}`
-    const sensor: Sensor = {
-      id,
-      name: input.name,
-      status: 'online',
-      maxCapacityLiters: input.maxCapacityLiters,
-      tankHeightCm: 120,
-      waterDistanceCm: 120,
-      currentLiters: 0,
-      measurementIntervalMinutes: input.measurementIntervalMinutes,
-      lastReadingPercent: 0,
-      lastReadingAt: new Date().toISOString(),
-      alerts: {
-        disconnect: true,
-        lowWater: true,
-        lowWaterThresholdPercent: 25,
-      },
+  async registerSensor(input: RegisterSensorInput): Promise<Sensor> {
+    const id = input.id.trim().toUpperCase()
+
+    assertValidSensorId(id)
+
+    const sensor = adminSensors.find((item) => item.id === id)
+
+    if (!sensor) {
+      throw new Error('El sensor no existe en el catálogo del administrador.')
     }
 
-    sensors = [sensor, ...sensors]
-    readings = [
-      {
-        id: `R-${String(readings.length + 1).padStart(3, '0')}`,
-        sensorId: id,
-        percentage: 0,
-        liters: 0,
-        measuredAt: sensor.lastReadingAt,
-      },
-      ...readings,
-    ]
+    if (registeredSensorIds.includes(id)) {
+      throw new Error('Este sensor ya está registrado en tus tinacos.')
+    }
+
+    registeredSensorIds = [id, ...registeredSensorIds]
 
     return sensor
   },
 
+  async unregisterSensor(sensorId: string): Promise<void> {
+    const id = sensorId.trim().toUpperCase()
+
+    if (!registeredSensorIds.includes(id)) {
+      throw new Error('Este tinaco no está vinculado a tu cuenta.')
+    }
+
+    registeredSensorIds = registeredSensorIds.filter((item) => item !== id)
+  },
+
   async updateSensorSettings(sensorId: string, input: SensorSettingsInput): Promise<Sensor> {
-    const sensor = sensors.find((item) => item.id === sensorId)
+    const sensor = adminSensors.find((item) => item.id === sensorId)
 
     if (!sensor) {
       throw new Error('Sensor no encontrado')
     }
+
+    assertValidSensorSettings(input)
 
     const nextReadingPercent = Math.max(
       0,
@@ -161,12 +179,12 @@ export const sensorService = {
       currentLiters: Math.round((input.maxCapacityLiters * nextReadingPercent) / 100),
     }
 
-    sensors = sensors.map((item) => (item.id === sensorId ? updatedSensor : item))
+    adminSensors = adminSensors.map((item) => (item.id === sensorId ? updatedSensor : item))
     return updatedSensor
   },
 
   async updateSensorAlerts(sensorId: string, input: SensorAlertsInput): Promise<Sensor> {
-    const sensor = sensors.find((item) => item.id === sensorId)
+    const sensor = adminSensors.find((item) => item.id === sensorId)
 
     if (!sensor) {
       throw new Error('Sensor no encontrado')
@@ -177,7 +195,7 @@ export const sensorService = {
       alerts: input,
     }
 
-    sensors = sensors.map((item) => (item.id === sensorId ? updatedSensor : item))
+    adminSensors = adminSensors.map((item) => (item.id === sensorId ? updatedSensor : item))
     return updatedSensor
   },
 }

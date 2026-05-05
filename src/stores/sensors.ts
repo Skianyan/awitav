@@ -3,9 +3,9 @@ import { defineStore } from 'pinia'
 
 import { sensorService } from '@/services/sensorService'
 import type {
-  NewSensorInput,
   Notification,
   Reading,
+  RegisterSensorInput,
   Sensor,
   SensorAlertsInput,
   SensorSettingsInput,
@@ -19,8 +19,11 @@ export const useSensorsStore = defineStore('sensors', () => {
 
   const pendingNotifications = computed(() => notifications.value.filter((item) => !item.read))
 
+  const registeredSensorIdSet = computed(() => new Set(sensors.value.map((sensor) => sensor.id)))
+
   const recentReadings = computed(() =>
     readings.value
+      .filter((reading) => registeredSensorIdSet.value.has(reading.sensorId))
       .slice()
       .sort((first, second) => new Date(second.measuredAt).getTime() - new Date(first.measuredAt).getTime())
       .slice(0, 6),
@@ -44,8 +47,8 @@ export const useSensorsStore = defineStore('sensors', () => {
     }
   }
 
-  async function addSensor(input: NewSensorInput) {
-    const sensor = await sensorService.createSensor(input)
+  async function addSensor(input: RegisterSensorInput) {
+    const sensor = await sensorService.registerSensor(input)
     sensors.value = [sensor, ...sensors.value]
     readings.value = await sensorService.getReadings()
   }
@@ -58,6 +61,11 @@ export const useSensorsStore = defineStore('sensors', () => {
   async function updateSensorAlerts(sensorId: string, input: SensorAlertsInput) {
     const sensor = await sensorService.updateSensorAlerts(sensorId, input)
     sensors.value = sensors.value.map((item) => (item.id === sensorId ? sensor : item))
+  }
+
+  async function unlinkSensor(sensorId: string) {
+    await sensorService.unregisterSensor(sensorId)
+    sensors.value = await sensorService.getSensors()
   }
 
   function getSensorReadings(sensorId: string) {
@@ -77,6 +85,7 @@ export const useSensorsStore = defineStore('sensors', () => {
     addSensor,
     updateSensorSettings,
     updateSensorAlerts,
+    unlinkSensor,
     getSensorReadings,
   }
 })

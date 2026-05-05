@@ -78,6 +78,37 @@ a {
   font-size: 0.85rem;
 }
 
+.button--danger {
+  color: #8c2932;
+  background: #ffe0e3;
+}
+
+.button--danger:hover {
+  background: #ffc9cf;
+  box-shadow: 0 12px 24px rgba(140, 41, 50, 0.18);
+}
+
+.button--danger-solid {
+  color: #ffffff;
+  background: #c41e3a;
+}
+
+.button--danger-solid:hover {
+  background: #a01830;
+  box-shadow: 0 12px 24px rgba(196, 30, 58, 0.35);
+}
+
+.modal-confirm-text {
+  margin: 0 0 0.75rem;
+  color: #25384d;
+  font-size: 1.05rem;
+  line-height: 1.55;
+}
+
+.modal-confirm-text strong {
+  color: #0b1726;
+}
+
 .eyebrow {
   margin: 0 0 0.55rem;
   color: #087ea4;
@@ -670,6 +701,24 @@ input {
   margin: 0;
 }
 
+.form-help,
+.form-error {
+  margin: 0;
+  line-height: 1.55;
+}
+
+.form-help {
+  color: #526477;
+}
+
+.form-error {
+  padding: 0.75rem 0.9rem;
+  border-radius: 0.8rem;
+  color: #8c2932;
+  background: #ffe0e3;
+  font-weight: 700;
+}
+
 .form-actions,
 .table-actions {
   display: flex;
@@ -754,6 +803,19 @@ input {
 
 .modal-form--grid {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.modal-form--grid .form-error,
+.modal-form--grid .form-actions {
+  grid-column: 1 / -1;
+}
+
+.field-hint {
+  display: block;
+  margin-top: 0.25rem;
+  color: #647589;
+  font-size: 0.78rem;
+  font-weight: 600;
 }
 
 .panel--table {

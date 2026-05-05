@@ -38,10 +38,8 @@ export interface Notification {
   read: boolean
 }
 
-export interface NewSensorInput {
-  name: string
-  maxCapacityLiters: number
-  measurementIntervalMinutes: number
+export interface RegisterSensorInput {
+  id: string
 }
 
 export interface SensorAlertSettings {

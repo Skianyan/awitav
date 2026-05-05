@@ -2,18 +2,27 @@
 import { reactive, ref } from 'vue'
 
 import AuthenticatedLayout from '@/components/AuthenticatedLayout.vue'
+import {
+  MAX_CAPACITY_LITERS,
+  MAX_MEASUREMENT_INTERVAL_MINUTES,
+  MAX_TANK_HEIGHT_CM,
+  MAX_WATER_DISTANCE_CM,
+  SENSOR_ID_LENGTH,
+} from '@/constants/sensorLimits'
 import { useSensorsStore } from '@/stores/sensors'
 import type { Sensor } from '@/types'
 import { formatLiters, formatRelativeTime, getSensorStatusLabel } from '@/utils/format'
 
 const sensorsStore = useSensorsStore()
+const sensorIdPattern = `[A-Za-z0-9]{${SENSOR_ID_LENGTH}}`
 const isRegisterModalOpen = ref(false)
 const editingSensorId = ref<string | null>(null)
 const alertSensorId = ref<string | null>(null)
+const unlinkConfirmSensor = ref<Sensor | null>(null)
+const registerError = ref('')
+const settingsError = ref('')
 const form = reactive({
-  name: '',
-  maxCapacityLiters: 1100,
-  measurementIntervalMinutes: 15,
+  id: '',
 })
 const settingsForm = reactive({
   name: '',
@@ -29,16 +38,18 @@ const alertsForm = reactive({
 })
 
 const submitSensor = async () => {
-  await sensorsStore.addSensor({
-    name: form.name,
-    maxCapacityLiters: Number(form.maxCapacityLiters),
-    measurementIntervalMinutes: Number(form.measurementIntervalMinutes),
-  })
+  registerError.value = ''
 
-  form.name = ''
-  form.maxCapacityLiters = 1100
-  form.measurementIntervalMinutes = 15
-  isRegisterModalOpen.value = false
+  try {
+    await sensorsStore.addSensor({
+      id: form.id,
+    })
+
+    form.id = ''
+    isRegisterModalOpen.value = false
+  } catch (error) {
+    registerError.value = error instanceof Error ? error.message : 'No se pudo registrar el sensor.'
+  }
 }
 
 const editSettings = (sensor: Sensor) => {
@@ -64,15 +75,22 @@ const saveSettings = async () => {
     return
   }
 
-  await sensorsStore.updateSensorSettings(editingSensorId.value, {
-    name: settingsForm.name,
-    maxCapacityLiters: Number(settingsForm.maxCapacityLiters),
-    tankHeightCm: Number(settingsForm.tankHeightCm),
-    waterDistanceCm: Number(settingsForm.waterDistanceCm),
-    measurementIntervalMinutes: Number(settingsForm.measurementIntervalMinutes),
-  })
+  settingsError.value = ''
 
-  editingSensorId.value = null
+  try {
+    await sensorsStore.updateSensorSettings(editingSensorId.value, {
+      name: settingsForm.name,
+      maxCapacityLiters: Number(settingsForm.maxCapacityLiters),
+      tankHeightCm: Number(settingsForm.tankHeightCm),
+      waterDistanceCm: Number(settingsForm.waterDistanceCm),
+      measurementIntervalMinutes: Number(settingsForm.measurementIntervalMinutes),
+    })
+
+    editingSensorId.value = null
+  } catch (error) {
+    settingsError.value =
+      error instanceof Error ? error.message : 'No se pudieron guardar los cambios.'
+  }
 }
 
 const saveAlerts = async () => {
@@ -91,14 +109,45 @@ const saveAlerts = async () => {
 
 const closeRegisterModal = () => {
   isRegisterModalOpen.value = false
+  registerError.value = ''
 }
 
 const closeSettingsModal = () => {
   editingSensorId.value = null
+  settingsError.value = ''
 }
 
 const closeAlertsModal = () => {
   alertSensorId.value = null
+}
+
+const openUnlinkModal = (sensor: Sensor) => {
+  unlinkConfirmSensor.value = sensor
+}
+
+const closeUnlinkModal = () => {
+  unlinkConfirmSensor.value = null
+}
+
+const confirmUnlink = async () => {
+  const sensor = unlinkConfirmSensor.value
+
+  if (!sensor) {
+    return
+  }
+
+  const id = sensor.id
+
+  if (editingSensorId.value === id) {
+    editingSensorId.value = null
+  }
+
+  if (alertSensorId.value === id) {
+    alertSensorId.value = null
+  }
+
+  await sensorsStore.unlinkSensor(id)
+  unlinkConfirmSensor.value = null
 }
 </script>
 
@@ -160,6 +209,19 @@ const closeAlertsModal = () => {
                   >
                     &#128276;
                   </button>
+                  <button
+                    class="button button--small button--danger"
+                    type="button"
+                    aria-label="Desvincular tinaco"
+                    title="Desvincular tinaco"
+                    @click="openUnlinkModal(sensor)"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m13.82 10.18 5.66-5.66a2 2 0 0 0-2.83-2.83l-5.66 5.66" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m10.18 13.82-5.66 5.66a2 2 0 1 0 2.83 2.83l5.66-5.66" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="m16.95 16.95 2.12 2.12M5 5l2.12 2.12" />
+                    </svg>
+                  </button>
                 </div>
               </td>
             </tr>
@@ -174,26 +236,33 @@ const closeAlertsModal = () => {
           <div class="modal-card__header">
             <div>
               <p class="eyebrow">Nuevo sensor</p>
-              <h2 id="register-sensor-title">Registrar sensor</h2>
+              <h2 id="register-sensor-title">Registrar sensor por ID</h2>
             </div>
             <button class="modal-close" type="button" aria-label="Cerrar" @click="closeRegisterModal">×</button>
           </div>
 
           <form class="modal-form" @submit.prevent="submitSensor">
-            <label>
-              Nombre del sensor
-              <input v-model="form.name" type="text" required placeholder="Tinaco cocina" />
-            </label>
+            <p class="form-help">
+              Los sensores son dados de alta manualmente por el administrador. Ingresa el ID único de
+              {{ SENSOR_ID_LENGTH }} caracteres alfanuméricos para vincularlo a tus tinacos registrados.
+            </p>
 
             <label>
-              Capacidad máxima en litros
-              <input v-model.number="form.maxCapacityLiters" type="number" required min="1" />
+              ID del sensor
+              <input
+                v-model.trim="form.id"
+                type="text"
+                required
+                :maxlength="SENSOR_ID_LENGTH"
+                :pattern="sensorIdPattern"
+                placeholder="TINC04"
+                autocomplete="off"
+                spellcheck="false"
+                @input="form.id = form.id.toUpperCase()"
+              />
             </label>
 
-            <label>
-              Intervalo de medición en minutos
-              <input v-model.number="form.measurementIntervalMinutes" type="number" required min="1" />
-            </label>
+            <p v-if="registerError" class="form-error">{{ registerError }}</p>
 
             <div class="form-actions">
               <button class="button" type="submit">Guardar sensor</button>
@@ -218,28 +287,62 @@ const closeAlertsModal = () => {
           <form class="modal-form modal-form--grid" @submit.prevent="saveSettings">
             <label>
               Nombre
-              <input v-model="settingsForm.name" type="text" required />
+              <input v-model="settingsForm.name" type="text" required maxlength="120" />
             </label>
 
             <label>
-              Capacidad
-              <input v-model.number="settingsForm.maxCapacityLiters" type="number" required min="1" />
+              Capacidad (L)
+              <input
+                v-model.number="settingsForm.maxCapacityLiters"
+                type="number"
+                required
+                min="1"
+                :max="MAX_CAPACITY_LITERS"
+                step="1"
+              />
+              <span class="field-hint">Máximo {{ MAX_CAPACITY_LITERS.toLocaleString('es-MX') }} L</span>
             </label>
 
             <label>
               Altura (cm)
-              <input v-model.number="settingsForm.tankHeightCm" type="number" required min="1" />
+              <input
+                v-model.number="settingsForm.tankHeightCm"
+                type="number"
+                required
+                min="1"
+                :max="MAX_TANK_HEIGHT_CM"
+                step="1"
+              />
+              <span class="field-hint">Máximo {{ MAX_TANK_HEIGHT_CM }} cm</span>
             </label>
 
             <label>
               Distancia al agua (cm)
-              <input v-model.number="settingsForm.waterDistanceCm" type="number" required min="0" />
+              <input
+                v-model.number="settingsForm.waterDistanceCm"
+                type="number"
+                required
+                min="0"
+                :max="MAX_WATER_DISTANCE_CM"
+                step="1"
+              />
+              <span class="field-hint">Máximo {{ MAX_WATER_DISTANCE_CM }} cm · no mayor que la altura</span>
             </label>
 
             <label>
               Intervalo de mediciones (min)
-              <input v-model.number="settingsForm.measurementIntervalMinutes" type="number" required min="1" />
+              <input
+                v-model.number="settingsForm.measurementIntervalMinutes"
+                type="number"
+                required
+                min="1"
+                :max="MAX_MEASUREMENT_INTERVAL_MINUTES"
+                step="1"
+              />
+              <span class="field-hint">Máximo {{ MAX_MEASUREMENT_INTERVAL_MINUTES }} min (24 horas)</span>
             </label>
+
+            <p v-if="settingsError" class="form-error">{{ settingsError }}</p>
 
             <div class="form-actions">
               <button class="button" type="submit">Guardar cambios</button>
@@ -290,6 +393,39 @@ const closeAlertsModal = () => {
               </button>
             </div>
           </form>
+        </section>
+      </div>
+
+      <div
+        v-if="unlinkConfirmSensor"
+        class="modal-backdrop"
+        role="presentation"
+        @click.self="closeUnlinkModal"
+      >
+        <section
+          class="modal-card"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="unlink-title"
+          aria-describedby="unlink-desc"
+        >
+          <div class="modal-card__header">
+            <div>
+              <p class="eyebrow">Confirmar</p>
+              <h2 id="unlink-title">Desvincular tinaco</h2>
+            </div>
+            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeUnlinkModal">×</button>
+          </div>
+
+          <p id="unlink-desc" class="modal-confirm-text">
+            ¿Estás seguro de que quieres desvincular <strong>{{ unlinkConfirmSensor.name }}</strong>?
+          </p>
+          <p class="form-help">Podrás volver a vincularlo más tarde con el mismo ID del sensor.</p>
+
+          <div class="form-actions">
+            <button class="button button--danger-solid" type="button" @click="confirmUnlink">Desvincular</button>
+            <button class="button button--secondary" type="button" @click="closeUnlinkModal">Cancelar</button>
+          </div>
         </section>
       </div>
     </Teleport>
