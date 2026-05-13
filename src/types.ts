@@ -1,13 +1,27 @@
+/**
+ * Definiciones de tipos TypeScript
+ *
+ * Proporciona las interfaces y tipos principales para toda la aplicación.
+ */
+
+/** Proveedor de autenticación soportado */
 export type AuthProvider = 'email' | 'google'
 
+/**
+ * Información del usuario autenticado
+ */
 export interface User {
   id: string
   email: string
   provider: AuthProvider
 }
 
+/** Estado posible de un sensor */
 export type SensorStatus = 'online' | 'warning' | 'offline'
 
+/**
+ * Representa un sensor de tinaco
+ */
 export interface Sensor {
   id: string
   name: string
@@ -22,6 +36,9 @@ export interface Sensor {
   alerts: SensorAlertSettings
 }
 
+/**
+ * Una lectura individual de un sensor
+ */
 export interface Reading {
   id: string
   sensorId: string
@@ -30,6 +47,9 @@ export interface Reading {
   measuredAt: string
 }
 
+/**
+ * Notificación del sistema
+ */
 export interface Notification {
   id: string
   type: 'info' | 'warning' | 'critical'
@@ -38,10 +58,16 @@ export interface Notification {
   read: boolean
 }
 
+/**
+ * Input para registrar un nuevo sensor
+ */
 export interface RegisterSensorInput {
   id: string
 }
 
+/**
+ * Configuración de alertas para un sensor
+ */
 export interface SensorAlertSettings {
   disconnect: boolean
   lowWater: boolean

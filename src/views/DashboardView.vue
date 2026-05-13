@@ -1,30 +1,62 @@
 <script setup lang="ts">
+/**
+ * DashboardView - Panel de control principal de la aplicación
+ *
+ * Muestra:
+ * - Resumen visual de todos los sensores registrados (con gauges)
+ * - Métricas clave por sensor (capacidad, estado, última actualización)
+ * - Gráfico histórico general de niveles de agua
+ * - Selector de rango temporal (24h, 7d, 30d)
+ *
+ * Los sensores son clicables y llevan a la vista detallada individual.
+ *
+ * @component
+ */
 import { computed } from 'vue'
 import { ref } from 'vue'
 
 import AuthenticatedLayout from '@/components/AuthenticatedLayout.vue'
+import WaterLevelGauge from '@/components/WaterLevelGauge.vue'
 import { useSensorsStore } from '@/stores/sensors'
 import { formatDateTime, formatLiters, formatRelativeTime, getSensorStatusLabel } from '@/utils/format'
 
 const sensorsStore = useSensorsStore()
+
+/**
+ * Tipos de rango temporal disponibles
+ */
 type RangeKey = '24h' | '7d' | '30d'
 
+// Rango temporal seleccionado por defecto
 const selectedRange = ref<RangeKey>('24h')
+
+/**
+ * Opciones de rango temporal para filtrar histórico
+ */
 const rangeOptions: Array<{ key: RangeKey; label: string; milliseconds: number }> = [
   { key: '24h', label: 'Ultimas 24 horas', milliseconds: 24 * 60 * 60 * 1000 },
   { key: '7d', label: 'Ultima semana', milliseconds: 7 * 24 * 60 * 60 * 1000 },
   { key: '30d', label: 'Ultimo mes', milliseconds: 30 * 24 * 60 * 60 * 1000 },
 ]
 
+// Dimensiones del gráfico
 const chartWidth = 720
 const chartHeight = 260
 const chartPaddingX = 66
 const chartPaddingY = 26
 
+/**
+ * Obtiene la configuración del rango temporal seleccionado
+ * @returns {object} Configuración con duración en milisegundos
+ */
 const selectedRangeConfig = computed(
   () => rangeOptions.find((option) => option.key === selectedRange.value) ?? rangeOptions[0],
 )
 
+/**
+ * Filtra lecturas según el rango temporal seleccionado
+ * @returns {Reading[]} Array de lecturas dentro del rango
+ */
 const filteredReadings = computed(() => {
   const sortedReadings = sensorsStore.readings
     .slice()
@@ -40,6 +72,11 @@ const filteredReadings = computed(() => {
   return sortedReadings.filter((reading) => new Date(reading.measuredAt).getTime() >= startTimestamp)
 })
 
+/**
+ * Redimensiona las lecturas a máximo 60 puntos para el gráfico
+ * Evita saturación visual con muchos datos
+ * @returns {Reading[]} Array de lecturas optimizadas para render
+ */
 const chartReadings = computed(() => {
   if (filteredReadings.value.length <= 60) {
     return filteredReadings.value
@@ -114,7 +151,7 @@ const xAxisLabels = computed(() => {
     </section>
 
     <section class="sensor-grid" aria-label="Sensores registrados">
-      <article v-for="sensor in sensorsStore.sensors" :key="sensor.id" class="sensor-card">
+      <router-link v-for="sensor in sensorsStore.sensors" :key="sensor.id" :to="`/sensor/${sensor.id}`" class="sensor-card">
         <div class="sensor-card__header">
           <div>
             <span class="sensor-card__id">{{ sensor.id }}</span>
@@ -126,7 +163,7 @@ const xAxisLabels = computed(() => {
         </div>
 
         <div class="water-meter">
-          <span :style="{ width: `${sensor.lastReadingPercent}%` }"></span>
+          <WaterLevelGauge :level="sensor.lastReadingPercent" :sensor-name="sensor.name" />
         </div>
 
         <dl class="metrics">
@@ -143,7 +180,7 @@ const xAxisLabels = computed(() => {
             <dd>{{ formatRelativeTime(sensor.lastReadingAt) }}</dd>
           </div>
         </dl>
-      </article>
+      </router-link>
     </section>
 
     <section class="panel">
