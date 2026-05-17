@@ -68,6 +68,21 @@ export const useSensorsStore = defineStore('sensors', () => {
     sensors.value = await sensorService.getSensors()
   }
 
+  async function markNotificationAsRead(notificationId: string) {
+    await sensorService.markNotificationRead(notificationId)
+    notifications.value = await sensorService.getNotifications()
+  }
+
+  async function markAllNotificationsAsRead() {
+    await sensorService.markAllNotificationsRead()
+    notifications.value = await sensorService.getNotifications()
+  }
+
+  async function clearReadNotifications() {
+    await sensorService.clearReadNotifications()
+    notifications.value = await sensorService.getNotifications()
+  }
+
   function getSensorReadings(sensorId: string) {
     return readings.value
       .filter((reading) => reading.sensorId === sensorId)
@@ -86,6 +101,9 @@ export const useSensorsStore = defineStore('sensors', () => {
     updateSensorSettings,
     updateSensorAlerts,
     unlinkSensor,
+    markNotificationAsRead,
+    markAllNotificationsAsRead,
+    clearReadNotifications,
     getSensorReadings,
   }
 })

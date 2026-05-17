@@ -5,7 +5,7 @@
         <p class="eyebrow">Sensor</p>
         <h1>{{ sensor?.name || 'Sensor no encontrado' }}</h1>
       </div>
-      <router-link to="/sensores" class="btn btn--secondary">Volver a sensores</router-link>
+      <router-link to="/sensores" class="button button--secondary">Volver a sensores</router-link>
     </section>
 
     <div v-if="sensor" class="sensor-detail">
@@ -86,8 +86,13 @@
             </span>
           </div>
         </div>
-        <p v-else>No hay datos de historial disponibles.</p>
+        <p v-else>Sensor no encontrado o sin datos de historial disponibles.</p>
       </div>
+    </div>
+    <div v-else class="panel empty-state">
+      <h2>Sensor no encontrado</h2>
+      <p>El sensor que buscas no existe en tu cuenta.</p>
+      <router-link to="/sensores" class="button button--secondary">Volver a sensores</router-link>
     </div>
   </AuthenticatedLayout>
 </template>

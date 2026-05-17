@@ -82,7 +82,7 @@ let adminSensors: Sensor[] = [
   },
 ]
 
-let registeredSensorIds = ['TINC01', 'TINC02', 'TINC03']
+let registeredSensorIds = ['TINC01']
 
 let readings: Reading[] = [
   { id: 'R-001', sensorId: 'TINC01', percentage: 75, liters: 825, measuredAt: minutesAgo(7) },
@@ -94,7 +94,7 @@ let readings: Reading[] = [
   { id: 'R-007', sensorId: 'TINC04', percentage: 60, liters: 360, measuredAt: minutesAgo(12) },
 ]
 
-const notifications: Notification[] = [
+let notifications: Notification[] = [
   {
     id: 'N-001',
     type: 'warning',
@@ -122,6 +122,20 @@ export const sensorService = {
 
   async getNotifications(): Promise<Notification[]> {
     return [...notifications]
+  },
+
+  async markNotificationRead(notificationId: string): Promise<void> {
+    notifications = notifications.map((item) =>
+      item.id === notificationId ? { ...item, read: true } : item,
+    )
+  },
+
+  async markAllNotificationsRead(): Promise<void> {
+    notifications = notifications.map((item) => ({ ...item, read: true }))
+  },
+
+  async clearReadNotifications(): Promise<void> {
+    notifications = notifications.filter((item) => !item.read)
   },
 
   async registerSensor(input: RegisterSensorInput): Promise<Sensor> {

@@ -10,6 +10,9 @@ const sensorsStore = useSensorsStore()
 const router = useRouter()
 const isUserMenuOpen = ref(false)
 const isAccountModalOpen = ref(false)
+const isSavingProfile = ref(false)
+const profileError = ref('')
+const profileName = ref('')
 const userMenuRef = ref<HTMLElement | null>(null)
 
 const primaryNavigation = [
@@ -24,6 +27,11 @@ const notificationNavigation = {
 }
 
 const displayName = computed(() => {
+  const name = auth.user?.name?.trim()
+  if (name) {
+    return name
+  }
+
   const email = auth.user?.email ?? ''
   if (!email) {
     return 'Usuario'
@@ -38,6 +46,7 @@ const closeUserMenu = () => {
 
 const closeAccountModal = () => {
   isAccountModalOpen.value = false
+  profileError.value = ''
 }
 
 const toggleUserMenu = () => {
@@ -46,7 +55,27 @@ const toggleUserMenu = () => {
 
 const openAccount = () => {
   closeUserMenu()
+  profileName.value = auth.user?.name ?? auth.user?.email?.split('@')[0] ?? ''
   isAccountModalOpen.value = true
+}
+
+const saveProfile = async () => {
+  if (!profileName.value.trim()) {
+    profileError.value = 'El nombre es requerido.'
+    return
+  }
+
+  isSavingProfile.value = true
+  profileError.value = ''
+
+  try {
+    auth.updateProfile(profileName.value.trim())
+    closeAccountModal()
+  } catch (error) {
+    profileError.value = 'No se pudo actualizar el perfil.'
+  } finally {
+    isSavingProfile.value = false
+  }
 }
 
 const logout = async () => {
@@ -104,7 +133,7 @@ onBeforeUnmount(() => {
             <span class="sidebar__link-icon" aria-hidden="true">{{ notificationNavigation.icon }}</span>
             <span>{{ notificationNavigation.label }}</span>
           </span>
-          <span class="badge">
+          <span v-if="sensorsStore.pendingNotifications.length" class="badge">
             {{ sensorsStore.pendingNotifications.length }}
           </span>
         </RouterLink>
@@ -144,26 +173,37 @@ onBeforeUnmount(() => {
             <button class="modal-close" type="button" aria-label="Cerrar" @click="closeAccountModal">×</button>
           </div>
 
-          <dl class="account-info">
-            <div>
-              <dt>Nombre</dt>
-              <dd>{{ displayName }}</dd>
+          <div class="account-info">
+            <label class="account-field">
+              <span>Nombre</span>
+              <input
+                type="text"
+                v-model="profileName"
+                required
+                maxlength="50"
+                placeholder="Tu nombre"
+              />
+            </label>
+            <div class="account-field">
+              <span>Correo</span>
+              <strong>{{ auth.user?.email }}</strong>
             </div>
-            <div>
-              <dt>Correo</dt>
-              <dd>{{ auth.user?.email }}</dd>
+            <div class="account-field">
+              <span>Proveedor</span>
+              <strong>{{ auth.user?.provider }}</strong>
             </div>
-            <div>
-              <dt>Proveedor</dt>
-              <dd>{{ auth.user?.provider }}</dd>
+            <div class="account-field">
+              <span>ID</span>
+              <strong>{{ auth.user?.id }}</strong>
             </div>
-            <div>
-              <dt>ID</dt>
-              <dd>{{ auth.user?.id }}</dd>
-            </div>
-          </dl>
+          </div>
+
+          <p v-if="profileError" class="form-error">{{ profileError }}</p>
 
           <div class="form-actions">
+            <button class="button" type="button" @click="saveProfile" :disabled="isSavingProfile">
+              {{ isSavingProfile ? 'Guardando...' : 'Guardar cambios' }}
+            </button>
             <button class="button button--secondary" type="button" @click="closeAccountModal">Cerrar</button>
           </div>
         </section>

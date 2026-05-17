@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 
 import AuthenticatedLayout from '@/components/AuthenticatedLayout.vue'
 import {
@@ -15,15 +15,18 @@ import { formatLiters, formatRelativeTime, getSensorStatusLabel } from '@/utils/
 
 const sensorsStore = useSensorsStore()
 const sensorIdPattern = `[A-Za-z0-9]{${SENSOR_ID_LENGTH}}`
+const sensorIdRegex = new RegExp(`^[A-Za-z0-9]{${SENSOR_ID_LENGTH}}$`)
 const isRegisterModalOpen = ref(false)
 const editingSensorId = ref<string | null>(null)
 const alertSensorId = ref<string | null>(null)
 const unlinkConfirmSensor = ref<Sensor | null>(null)
 const registerError = ref('')
 const settingsError = ref('')
+const alertsError = ref('')
 const form = reactive({
   id: '',
 })
+const isSensorIdValid = computed(() => sensorIdRegex.test(form.id.trim().toUpperCase()))
 const settingsForm = reactive({
   name: '',
   maxCapacityLiters: 1100,
@@ -37,12 +40,28 @@ const alertsForm = reactive({
   lowWaterThresholdPercent: 25,
 })
 
+const isLowWaterThresholdDisabled = computed(() => !alertsForm.lowWater)
+const canSaveAlerts = computed(() => {
+  if (!alertsForm.lowWater) {
+    return true
+  }
+
+  const threshold = Number(alertsForm.lowWaterThresholdPercent)
+  return Number.isFinite(threshold) && threshold >= 1 && threshold <= 100
+})
+
 const submitSensor = async () => {
   registerError.value = ''
 
+  const id = form.id.trim().toUpperCase()
+  if (!sensorIdRegex.test(id)) {
+    registerError.value = `El ID debe tener exactamente ${SENSOR_ID_LENGTH} caracteres alfanuméricos.`
+    return
+  }
+
   try {
     await sensorsStore.addSensor({
-      id: form.id,
+      id,
     })
 
     form.id = ''
@@ -77,6 +96,16 @@ const saveSettings = async () => {
 
   settingsError.value = ''
 
+  if (!settingsForm.name.trim()) {
+    settingsError.value = 'El nombre del tinaco es obligatorio.'
+    return
+  }
+
+  if (settingsForm.waterDistanceCm >= settingsForm.tankHeightCm) {
+    settingsError.value = 'La distancia al agua debe ser menor que la altura del tinaco.'
+    return
+  }
+
   try {
     await sensorsStore.updateSensorSettings(editingSensorId.value, {
       name: settingsForm.name,
@@ -96,6 +125,17 @@ const saveSettings = async () => {
 const saveAlerts = async () => {
   if (!alertSensorId.value) {
     return
+  }
+
+  settingsError.value = ''
+  alertsError.value = ''
+
+  if (alertsForm.lowWater) {
+    const threshold = Number(alertsForm.lowWaterThresholdPercent)
+    if (!Number.isFinite(threshold) || threshold < 1 || threshold > 100) {
+      alertsError.value = 'El umbral debe ser un número entre 1 y 100.'
+      return
+    }
   }
 
   await sensorsStore.updateSensorAlerts(alertSensorId.value, {
@@ -119,6 +159,7 @@ const closeSettingsModal = () => {
 
 const closeAlertsModal = () => {
   alertSensorId.value = null
+  alertsError.value = ''
 }
 
 const openUnlinkModal = (sensor: Sensor) => {
@@ -225,6 +266,9 @@ const confirmUnlink = async () => {
                 </div>
               </td>
             </tr>
+            <tr v-if="!sensorsStore.sensors.length">
+              <td class="empty-table-cell" colspan="7">No hay tinacos registrados. Agrega un sensor para comenzar.</td>
+            </tr>
           </tbody>
         </table>
       </div>
@@ -261,11 +305,15 @@ const confirmUnlink = async () => {
                 @input="form.id = form.id.toUpperCase()"
               />
             </label>
-
+            <p v-if="form.id && !isSensorIdValid" class="error-message">
+              El ID debe tener exactamente {{ SENSOR_ID_LENGTH }} caracteres alfanuméricos.
+            </p>
             <p v-if="registerError" class="form-error">{{ registerError }}</p>
 
             <div class="form-actions">
-              <button class="button" type="submit">Guardar sensor</button>
+              <button class="button" type="submit" :disabled="!isSensorIdValid">
+                Guardar sensor
+              </button>
               <button class="button button--secondary" type="button" @click="closeRegisterModal">
                 Cancelar
               </button>
@@ -383,11 +431,16 @@ const confirmUnlink = async () => {
                 required
                 min="1"
                 max="100"
+                :disabled="isLowWaterThresholdDisabled"
               />
             </label>
 
+            <p v-if="alertsError" class="form-error">{{ alertsError }}</p>
+
             <div class="form-actions">
-              <button class="button" type="submit">Guardar alertas</button>
+              <button class="button" type="submit" :disabled="!canSaveAlerts">
+                Guardar alertas
+              </button>
               <button class="button button--secondary" type="button" @click="closeAlertsModal">
                 Cancelar
               </button>

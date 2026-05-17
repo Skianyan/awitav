@@ -2,8 +2,9 @@ import type { AuthProvider, User } from '@/types'
 
 const SESSION_KEY = 'awita_session'
 
-const createUser = (email: string, provider: AuthProvider): User => ({
+const createUser = (email: string, provider: AuthProvider, name?: string): User => ({
   id: `${provider}-${email.toLowerCase()}`,
+  name: name ?? email.split('@')[0],
   email: email.toLowerCase(),
   provider,
 })
@@ -24,22 +25,42 @@ export const authService = {
     }
   },
 
-  loginWithEmail(email: string): User {
+  async loginWithEmail(email: string): Promise<User> {
+    // Simula demora de red
+    await new Promise((resolve) => setTimeout(resolve, 800))
     const user = createUser(email, 'email')
     localStorage.setItem(SESSION_KEY, JSON.stringify(user))
     return user
   },
 
-  registerWithEmail(email: string): User {
+  async registerWithEmail(email: string): Promise<User> {
+    // Simula demora de red
+    await new Promise((resolve) => setTimeout(resolve, 1000))
     const user = createUser(email, 'email')
     localStorage.setItem(SESSION_KEY, JSON.stringify(user))
     return user
   },
 
-  loginWithGoogle(): User {
-    const user = createUser('usuario.google@awita.app', 'google')
+  async loginWithGoogle(): Promise<User> {
+    // Simula demora de redirección OAuth
+    await new Promise((resolve) => setTimeout(resolve, 1200))
+    const user = createUser('usuario.google@awita.app', 'google', 'Usuario Google')
     localStorage.setItem(SESSION_KEY, JSON.stringify(user))
     return user
+  },
+
+  updateUserName(name: string): User {
+    const currentUser = this.getCurrentUser()
+    if (!currentUser) {
+      throw new Error('Usuario no autenticado')
+    }
+
+    const updatedUser: User = {
+      ...currentUser,
+      name,
+    }
+    localStorage.setItem(SESSION_KEY, JSON.stringify(updatedUser))
+    return updatedUser
   },
 
   logout(): void {

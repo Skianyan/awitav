@@ -10,15 +10,31 @@ export const useAuthStore = defineStore('auth', () => {
   const isAuthenticated = computed(() => Boolean(user.value))
 
   function loginWithEmail(email: string) {
-    user.value = authService.loginWithEmail(email)
+    return authService.loginWithEmail(email).then((newUser) => {
+      user.value = newUser
+      return newUser
+    })
   }
 
   function registerWithEmail(email: string) {
-    user.value = authService.registerWithEmail(email)
+    return authService.registerWithEmail(email).then((newUser) => {
+      user.value = newUser
+      return newUser
+    })
   }
 
   function loginWithGoogle() {
-    user.value = authService.loginWithGoogle()
+    return authService.loginWithGoogle().then((newUser) => {
+      user.value = newUser
+      return newUser
+    })
+  }
+
+  function updateProfile(name: string) {
+    if (!user.value) {
+      throw new Error('Usuario no autenticado')
+    }
+    user.value = authService.updateUserName(name)
   }
 
   function logout() {
@@ -32,6 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
     loginWithEmail,
     registerWithEmail,
     loginWithGoogle,
+    updateProfile,
     logout,
   }
 })

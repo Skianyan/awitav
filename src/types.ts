@@ -12,6 +12,7 @@ export type AuthProvider = 'email' | 'google'
  */
 export interface User {
   id: string
+  name: string
   email: string
   provider: AuthProvider
 }
