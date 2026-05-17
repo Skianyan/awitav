@@ -1,3 +1,10 @@
+/**
+ * sensorService
+ *
+ * Servicio de datos de sensores simulado en el frontend.
+ * Contiene sensores administrados, lecturas, notificaciones y
+ * métodos CRUD que operan sobre datos locales.
+ */
 import type {
   Notification,
   Reading,
@@ -82,7 +89,7 @@ let adminSensors: Sensor[] = [
   },
 ]
 
-let registeredSensorIds = ['TINC01']
+let registeredSensorIds = ['TINC01', 'TINC02', 'TINC03']
 
 let readings: Reading[] = [
   { id: 'R-001', sensorId: 'TINC01', percentage: 75, liters: 825, measuredAt: minutesAgo(7) },

@@ -1,3 +1,10 @@
+/**
+ * Sensors Store
+ *
+ * Gestiona el estado de los sensores, lecturas y notificaciones.
+ * Provee acciones para cargar datos, registrar sensores, actualizar
+ * configuración y manejar notificaciones desde la UI.
+ */
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 

@@ -1,3 +1,10 @@
+/**
+ * Auth Store
+ *
+ * Mantiene el estado de usuario autenticado en la aplicación.
+ * Este store se usa en la UI para controlar acceso, nombre de usuario,
+ * autenticación y cierre de sesión.
+ */
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
@@ -16,15 +23,15 @@ export const useAuthStore = defineStore('auth', () => {
     })
   }
 
-  function registerWithEmail(email: string) {
-    return authService.registerWithEmail(email).then((newUser) => {
+  function registerWithEmail(email: string, name?: string) {
+    return authService.registerWithEmail(email, name).then((newUser) => {
       user.value = newUser
       return newUser
     })
   }
 
-  function loginWithGoogle() {
-    return authService.loginWithGoogle().then((newUser) => {
+  function loginWithGoogle(email?: string) {
+    return authService.loginWithGoogle(email).then((newUser) => {
       user.value = newUser
       return newUser
     })

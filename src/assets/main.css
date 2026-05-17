@@ -189,6 +189,43 @@ button:disabled,
   gap: 0.75rem;
 }
 
+.auth-toggle {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.auth-toggle__button {
+  width: 100%;
+  color: var(--color-primary);
+  background: var(--color-surface-soft);
+}
+
+.auth-toggle__button--active {
+  color: #ffffff;
+  background: var(--color-primary);
+}
+
+.google-account-list {
+  display: grid;
+  gap: 0.65rem;
+}
+
+.google-account-option {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid #dbe8ef;
+  border-radius: 1rem;
+  background: #f8fbfd;
+}
+
+.custom-google-field {
+  display: grid;
+  gap: 0.4rem;
+}
+
 .hero-card,
 .feature-card,
 .login-card,
@@ -937,6 +974,22 @@ input {
   color: #647589;
   font-size: 0.78rem;
   font-weight: 600;
+}
+
+.error-message {
+  margin: 0.35rem 0 0;
+  color: #8c2932;
+  font-size: 0.95rem;
+}
+
+.success-message {
+  margin: 0.75rem 0 0;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  color: #11644b;
+  background: rgba(17, 100, 75, 0.1);
+  border: 1px solid rgba(17, 100, 75, 0.2);
+  font-weight: 700;
 }
 
 .panel--table {
