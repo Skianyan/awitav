@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue'
 
+import AppIcon from '@/components/AppIcon.vue'
 import AuthenticatedLayout from '@/components/AuthenticatedLayout.vue'
 import {
   MAX_CAPACITY_LITERS,
@@ -239,7 +240,7 @@ const confirmUnlink = async () => {
                     title="Editar configuracion"
                     @click="editSettings(sensor)"
                   >
-                    &#9881;
+                    <AppIcon name="Settings" :size="18" />
                   </button>
                   <button
                     class="button button--small button--ghost"
@@ -248,7 +249,7 @@ const confirmUnlink = async () => {
                     title="Configurar alertas"
                     @click="editAlerts(sensor)"
                   >
-                    &#128276;
+                    <AppIcon name="BellRing" :size="18" />
                   </button>
                   <button
                     class="button button--small button--danger"
@@ -257,11 +258,7 @@ const confirmUnlink = async () => {
                     title="Desvincular tinaco"
                     @click="openUnlinkModal(sensor)"
                   >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" aria-hidden="true">
-                      <path stroke-linecap="round" stroke-linejoin="round" d="m13.82 10.18 5.66-5.66a2 2 0 0 0-2.83-2.83l-5.66 5.66" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="m10.18 13.82-5.66 5.66a2 2 0 1 0 2.83 2.83l5.66-5.66" />
-                      <path stroke-linecap="round" stroke-linejoin="round" d="m16.95 16.95 2.12 2.12M5 5l2.12 2.12" />
-                    </svg>
+                    <AppIcon name="Unlink" :size="18" />
                   </button>
                 </div>
               </td>
@@ -282,7 +279,9 @@ const confirmUnlink = async () => {
               <p class="eyebrow">Nuevo sensor</p>
               <h2 id="register-sensor-title">Registrar sensor por ID</h2>
             </div>
-            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeRegisterModal">×</button>
+            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeRegisterModal">
+              <AppIcon name="X" :size="18" />
+            </button>
           </div>
 
           <form class="modal-form" @submit.prevent="submitSensor">
@@ -329,7 +328,9 @@ const confirmUnlink = async () => {
               <p class="eyebrow">Configuración</p>
               <h2 id="settings-title">Editar parámetros del tinaco</h2>
             </div>
-            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeSettingsModal">×</button>
+            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeSettingsModal">
+              <AppIcon name="X" :size="18" />
+            </button>
           </div>
 
           <form class="modal-form modal-form--grid" @submit.prevent="saveSettings">
@@ -409,7 +410,9 @@ const confirmUnlink = async () => {
               <p class="eyebrow">Alertas</p>
               <h2 id="alerts-title">Editar reglas de notificación</h2>
             </div>
-            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeAlertsModal">×</button>
+            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeAlertsModal">
+              <AppIcon name="X" :size="18" />
+            </button>
           </div>
 
           <form class="modal-form" @submit.prevent="saveAlerts">
@@ -467,7 +470,9 @@ const confirmUnlink = async () => {
               <p class="eyebrow">Confirmar</p>
               <h2 id="unlink-title">Desvincular tinaco</h2>
             </div>
-            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeUnlinkModal">×</button>
+            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeUnlinkModal">
+              <AppIcon name="X" :size="18" />
+            </button>
           </div>
 
           <p id="unlink-desc" class="modal-confirm-text">

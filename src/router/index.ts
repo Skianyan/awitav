@@ -1,23 +1,9 @@
-/**
- * Router Configuration
- *
- * Define las rutas de la aplicación:
- * - / : Landing page (pública)
- * - /dashboard : Panel de control principal (protegida)
- * - /sensores : Gestión de sensores (protegida)
- * - /sensor/:id : Vista detallada de un sensor (protegida)
- * - /notificaciones : Centro de notificaciones (protegida)
- *
- * El router incluye protección de rutas basada en autenticación.
- * Las rutas sin meta.public redirigen a landing si no hay sesión.
- */
 import { createRouter, createWebHistory } from 'vue-router'
 
 import { useAuthStore } from '@/stores/auth'
 import DashboardView from '@/views/DashboardView.vue'
 import LandingView from '@/views/LandingView.vue'
 import NotificationsView from '@/views/NotificationsView.vue'
-import SensorDetailView from '@/views/SensorDetailView.vue'
 import SensorsView from '@/views/SensorsView.vue'
 
 const router = createRouter({
@@ -40,11 +26,6 @@ const router = createRouter({
       component: SensorsView,
     },
     {
-      path: '/sensor/:id',
-      name: 'sensor-detail',
-      component: SensorDetailView,
-    },
-    {
       path: '/notificaciones',
       name: 'notifications',
       component: NotificationsView,
@@ -58,6 +39,10 @@ const router = createRouter({
 
 router.beforeEach((to) => {
   const auth = useAuthStore()
+
+  if (!auth.isClerkLoaded) {
+    return true
+  }
 
   if (!to.meta.public && !auth.isAuthenticated) {
     return { name: 'landing' }

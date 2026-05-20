@@ -2,6 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
+import AppIcon, { type AppIconName } from '@/components/AppIcon.vue'
 import { useAuthStore } from '@/stores/auth'
 import { useSensorsStore } from '@/stores/sensors'
 
@@ -10,28 +11,24 @@ const sensorsStore = useSensorsStore()
 const router = useRouter()
 const isUserMenuOpen = ref(false)
 const isAccountModalOpen = ref(false)
-const isSavingProfile = ref(false)
-const profileError = ref('')
-const profileName = ref('')
 const userMenuRef = ref<HTMLElement | null>(null)
 
-const primaryNavigation = [
-  { label: 'Panel de control', routeName: 'dashboard', icon: '📈' },
-  { label: 'Sensores', routeName: 'sensors', icon: '📳' },
+const primaryNavigation: Array<{
+  label: string
+  routeName: string
+  icon: AppIconName
+}> = [
+  { label: 'Panel de control', routeName: 'dashboard', icon: 'LayoutDashboard' },
+  { label: 'Sensores', routeName: 'sensors', icon: 'Gauge' },
 ]
 
 const notificationNavigation = {
   label: 'Notificaciones',
   routeName: 'notifications',
-  icon: '🔔',
+  icon: 'Bell' as AppIconName,
 }
 
 const displayName = computed(() => {
-  const name = auth.user?.name?.trim()
-  if (name) {
-    return name
-  }
-
   const email = auth.user?.email ?? ''
   if (!email) {
     return 'Usuario'
@@ -46,7 +43,6 @@ const closeUserMenu = () => {
 
 const closeAccountModal = () => {
   isAccountModalOpen.value = false
-  profileError.value = ''
 }
 
 const toggleUserMenu = () => {
@@ -55,27 +51,7 @@ const toggleUserMenu = () => {
 
 const openAccount = () => {
   closeUserMenu()
-  profileName.value = auth.user?.name ?? auth.user?.email?.split('@')[0] ?? ''
   isAccountModalOpen.value = true
-}
-
-const saveProfile = async () => {
-  if (!profileName.value.trim()) {
-    profileError.value = 'El nombre es requerido.'
-    return
-  }
-
-  isSavingProfile.value = true
-  profileError.value = ''
-
-  try {
-    auth.updateProfile(profileName.value.trim())
-    closeAccountModal()
-  } catch (error) {
-    profileError.value = 'No se pudo actualizar el perfil.'
-  } finally {
-    isSavingProfile.value = false
-  }
 }
 
 const logout = async () => {
@@ -108,9 +84,7 @@ onBeforeUnmount(() => {
   <aside class="sidebar">
     <div>
       <RouterLink class="brand" :to="{ name: 'dashboard' }">
-        <span>
-          <strong>AWITA</strong>
-        </span>
+        <span class="awita-logo">AWITA</span>
       </RouterLink>
 
       <nav class="sidebar__nav sidebar__nav--primary" aria-label="Navegación principal">
@@ -121,7 +95,7 @@ onBeforeUnmount(() => {
           :to="{ name: item.routeName }"
         >
           <span class="sidebar__link-main">
-            <span class="sidebar__link-icon" aria-hidden="true">{{ item.icon }}</span>
+            <AppIcon class="sidebar__link-icon" :name="item.icon" :size="18" />
             <span>{{ item.label }}</span>
           </span>
         </RouterLink>
@@ -130,10 +104,10 @@ onBeforeUnmount(() => {
       <nav class="sidebar__nav sidebar__nav--secondary" aria-label="Notificaciones">
         <RouterLink class="sidebar__link" :to="{ name: notificationNavigation.routeName }">
           <span class="sidebar__link-main">
-            <span class="sidebar__link-icon" aria-hidden="true">{{ notificationNavigation.icon }}</span>
+            <AppIcon class="sidebar__link-icon" :name="notificationNavigation.icon" :size="18" />
             <span>{{ notificationNavigation.label }}</span>
           </span>
-          <span v-if="sensorsStore.pendingNotifications.length" class="badge">
+          <span class="badge">
             {{ sensorsStore.pendingNotifications.length }}
           </span>
         </RouterLink>
@@ -148,12 +122,16 @@ onBeforeUnmount(() => {
         :aria-expanded="isUserMenuOpen"
         @click="toggleUserMenu"
       >
-        <span class="sidebar__user-icon" aria-hidden="true">&#128100;</span>
+        <span class="sidebar__user-icon">
+          <AppIcon name="User" :size="18" />
+        </span>
         <span class="sidebar__user-meta">
           <strong>{{ displayName }}</strong>
           <span>{{ auth.user?.email }}</span>
         </span>
-        <span class="sidebar__user-ellipsis" aria-hidden="true">&#8942;</span>
+        <span class="sidebar__user-ellipsis">
+          <AppIcon name="EllipsisVertical" :size="18" />
+        </span>
       </button>
 
       <div v-if="isUserMenuOpen" class="sidebar__user-menu" role="menu">
@@ -170,40 +148,31 @@ onBeforeUnmount(() => {
               <p class="eyebrow">Cuenta</p>
               <h2 id="account-title">Informacion del usuario</h2>
             </div>
-            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeAccountModal">×</button>
+            <button class="modal-close" type="button" aria-label="Cerrar" @click="closeAccountModal">
+              <AppIcon name="X" :size="18" />
+            </button>
           </div>
 
-          <div class="account-info">
-            <label class="account-field">
-              <span>Nombre</span>
-              <input
-                type="text"
-                v-model="profileName"
-                required
-                maxlength="50"
-                placeholder="Tu nombre"
-              />
-            </label>
-            <div class="account-field">
-              <span>Correo</span>
-              <strong>{{ auth.user?.email }}</strong>
+          <dl class="account-info">
+            <div>
+              <dt>Nombre</dt>
+              <dd>{{ displayName }}</dd>
             </div>
-            <div class="account-field">
-              <span>Proveedor</span>
-              <strong>{{ auth.user?.provider }}</strong>
+            <div>
+              <dt>Correo</dt>
+              <dd>{{ auth.user?.email }}</dd>
             </div>
-            <div class="account-field">
-              <span>ID</span>
-              <strong>{{ auth.user?.id }}</strong>
+            <div>
+              <dt>Proveedor</dt>
+              <dd>{{ auth.user?.provider }}</dd>
             </div>
-          </div>
-
-          <p v-if="profileError" class="form-error">{{ profileError }}</p>
+            <div>
+              <dt>ID</dt>
+              <dd>{{ auth.user?.id }}</dd>
+            </div>
+          </dl>
 
           <div class="form-actions">
-            <button class="button" type="button" @click="saveProfile" :disabled="isSavingProfile">
-              {{ isSavingProfile ? 'Guardando...' : 'Guardar cambios' }}
-            </button>
             <button class="button button--secondary" type="button" @click="closeAccountModal">Cerrar</button>
           </div>
         </section>

@@ -1,61 +1,60 @@
-/**
- * Auth Store
- *
- * Mantiene el estado de usuario autenticado en la aplicación.
- * Este store se usa en la UI para controlar acceso, nombre de usuario,
- * autenticación y cierre de sesión.
- */
-import { computed, ref } from 'vue'
+import { computed } from 'vue'
 import { defineStore } from 'pinia'
+import { useAuth, useUser } from '@clerk/vue'
+import type { UserResource } from '@clerk/types'
 
-import { authService } from '@/services/authService'
-import type { User } from '@/types'
+import type { AuthProvider, User } from '@/types'
+
+function resolveProvider(clerkUser: UserResource): AuthProvider {
+  const usesGoogle = clerkUser.externalAccounts.some(
+    (account) => account.provider === 'google',
+  )
+  return usesGoogle ? 'google' : 'email'
+}
+
+function mapClerkUser(clerkUser: UserResource): User {
+  const email = clerkUser.primaryEmailAddress?.emailAddress ?? ''
+
+  return {
+    id: clerkUser.id,
+    name:
+      clerkUser.fullName ??
+      clerkUser.firstName ??
+      email.split('@')[0] ??
+      'Usuario',
+    email,
+    provider: resolveProvider(clerkUser),
+  }
+}
 
 export const useAuthStore = defineStore('auth', () => {
-  const user = ref<User | null>(authService.getCurrentUser())
+  const { isLoaded, isSignedIn, signOut, getToken } = useAuth()
+  const { user: clerkUser } = useUser()
 
-  const isAuthenticated = computed(() => Boolean(user.value))
-
-  function loginWithEmail(email: string) {
-    return authService.loginWithEmail(email).then((newUser) => {
-      user.value = newUser
-      return newUser
-    })
-  }
-
-  function registerWithEmail(email: string, name?: string) {
-    return authService.registerWithEmail(email, name).then((newUser) => {
-      user.value = newUser
-      return newUser
-    })
-  }
-
-  function loginWithGoogle(email?: string) {
-    return authService.loginWithGoogle(email).then((newUser) => {
-      user.value = newUser
-      return newUser
-    })
-  }
-
-  function updateProfile(name: string) {
-    if (!user.value) {
-      throw new Error('Usuario no autenticado')
+  const user = computed<User | null>(() => {
+    if (!clerkUser.value) {
+      return null
     }
-    user.value = authService.updateUserName(name)
+
+    return mapClerkUser(clerkUser.value)
+  })
+
+  const isAuthenticated = computed(() => Boolean(isSignedIn.value))
+  const isClerkLoaded = computed(() => Boolean(isLoaded.value))
+
+  async function logout() {
+    await signOut.value()
   }
 
-  function logout() {
-    authService.logout()
-    user.value = null
+  async function getSessionToken() {
+    return getToken.value()
   }
 
   return {
     user,
     isAuthenticated,
-    loginWithEmail,
-    registerWithEmail,
-    loginWithGoogle,
-    updateProfile,
+    isClerkLoaded,
     logout,
+    getSessionToken,
   }
 })

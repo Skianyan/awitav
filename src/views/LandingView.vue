@@ -1,361 +1,166 @@
 <script setup lang="ts">
-/**
- * LandingView - Vista de inicio con formulario de autenticación
- *
- * Incluye validación de email, nombre y Google login simulado.
- */
-import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useClerk } from '@clerk/vue'
 
-import { useAuthStore } from '@/stores/auth'
-import {
-  isValidEmail,
-  isValidGoogleEmail,
-  isValidName,
-  normalizeEmail,
-} from '@/utils/authValidation'
+const clerk = useClerk()
+const githubUrl = 'https://github.com/Skianyan/awitav'
 
-type AuthMode = 'login' | 'register'
-
-const auth = useAuthStore()
-const router = useRouter()
-const authMode = ref<AuthMode>('login')
-const email = ref('demo@awita.app')
-const name = ref('')
-const isLoading = ref(false)
-const fieldErrors = ref({ email: '', name: '', google: '' })
-const formError = ref('')
-const successMessage = ref('')
-const googleModalOpen = ref(false)
-const googleAccounts = [
-  'usuario.awita@gmail.com',
-  'hogar.awita@gmail.com',
-  'servicios.awita@gmail.com',
+const benefits = [
+  {
+    title: 'Monitoreo en tiempo real',
+    description: 'Consulta el nivel y los litros disponibles de cada tinaco desde cualquier dispositivo.',
+  },
+  {
+    title: 'Alertas inteligentes',
+    description: 'Recibe avisos cuando el agua baja o un sensor deja de reportar mediciones.',
+  },
+  {
+    title: 'Historial de consumo',
+    description: 'Revisa lecturas recientes y detecta patrones de uso en tus tanques.',
+  },
+  {
+    title: 'Configuración por tinaco',
+    description: 'Ajusta capacidad, altura y umbrales de alerta según cada instalación.',
+  },
 ]
-const selectedGoogleEmail = ref(googleAccounts[0])
-const customGoogleEmail = ref('')
 
-const activeGoogleEmail = computed(() =>
-  customGoogleEmail.value.trim() ? customGoogleEmail.value.trim() : selectedGoogleEmail.value,
-)
-
-const goToDashboard = async () => {
-  await router.push({ name: 'dashboard' })
+const openSignIn = () => {
+  clerk.value?.openSignIn()
 }
 
-const clearErrors = () => {
-  fieldErrors.value = { email: '', name: '', google: '' }
-  formError.value = ''
-  successMessage.value = ''
+const openSignUp = () => {
+  clerk.value?.openSignUp()
 }
 
-const setMode = (mode: AuthMode) => {
-  authMode.value = mode
-  clearErrors()
-}
-
-const showSuccessAndRedirect = async (message: string) => {
-  successMessage.value = message
-  await new Promise((resolve) => setTimeout(resolve, 800))
-  await goToDashboard()
-}
-
-const validateEmailField = () => {
-  const value = normalizeEmail(email.value)
-  if (!value) {
-    return 'Ingresa tu correo electrónico.'
-  }
-  if (!isValidEmail(value)) {
-    return 'Ingresa un correo electrónico válido.'
-  }
-  return ''
-}
-
-const validateNameField = () => {
-  if (authMode.value !== 'register') {
-    return ''
-  }
-  if (!name.value.trim()) {
-    return 'Ingresa tu nombre completo.'
-  }
-  if (!isValidName(name.value)) {
-    return 'Ingresa un nombre válido.'
-  }
-  return ''
-}
-
-const validateGoogleField = () => {
-  const value = activeGoogleEmail.value
-  if (!value) {
-    return 'Selecciona o ingresa un correo de Google.'
-  }
-  if (!isValidGoogleEmail(value)) {
-    return 'Ingresa un correo de Google válido.'
-  }
-  return ''
-}
-
-const loginWithEmail = async () => {
-  fieldErrors.value.email = validateEmailField()
-  if (fieldErrors.value.email) {
-    return
-  }
-
-  isLoading.value = true
-  formError.value = ''
-  successMessage.value = ''
-
-  try {
-    await auth.loginWithEmail(normalizeEmail(email.value))
-    await showSuccessAndRedirect('Inicio de sesión exitoso. Redirigiendo...')
-  } catch {
-    formError.value = 'Error al iniciar sesión. Verifica tu correo.'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const registerWithEmail = async () => {
-  fieldErrors.value.email = validateEmailField()
-  fieldErrors.value.name = validateNameField()
-  if (fieldErrors.value.email || fieldErrors.value.name) {
-    return
-  }
-
-  isLoading.value = true
-  formError.value = ''
-  successMessage.value = ''
-
-  try {
-    await auth.registerWithEmail(normalizeEmail(email.value), name.value.trim())
-    await showSuccessAndRedirect(
-      `Registro exitoso. Bienvenido${name.value.trim() ? `, ${name.value.trim()}` : ''}! Redirigiendo...`,
-    )
-  } catch {
-    formError.value = 'Error al registrarse. Verifica tus datos e intenta de nuevo.'
-  } finally {
-    isLoading.value = false
-  }
-}
-
-const onSubmit = async () => {
-  if (authMode.value === 'login') {
-    await loginWithEmail()
-  } else {
-    await registerWithEmail()
-  }
-}
-
-const openGoogleModal = () => {
-  googleModalOpen.value = true
-  fieldErrors.value.google = ''
-  customGoogleEmail.value = ''
-  selectedGoogleEmail.value = googleAccounts[0]
-}
-
-const closeGoogleModal = () => {
-  googleModalOpen.value = false
-  fieldErrors.value.google = ''
-  customGoogleEmail.value = ''
-}
-
-const loginWithGoogle = async () => {
-  openGoogleModal()
-}
-
-const confirmGoogleSignIn = async () => {
-  fieldErrors.value.google = validateGoogleField()
-  if (fieldErrors.value.google) {
-    return
-  }
-
-  isLoading.value = true
-  formError.value = ''
-  successMessage.value = ''
-
-  try {
-    await auth.loginWithGoogle(activeGoogleEmail.value)
-    await showSuccessAndRedirect('Inicio de sesión con Google exitoso. Redirigiendo...')
-  } catch (error) {
-    formError.value = error instanceof Error ? error.message : 'Error al iniciar sesión con Google.'
-  } finally {
-    isLoading.value = false
-  }
+const scrollToDemo = () => {
+  document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })
 }
 </script>
 
 <template>
-  <main class="landing">
-    <section class="hero">
-      <div class="hero__content">
-        <p class="eyebrow">AWITA · Medidor inteligente para tinacos</p>
-        <h1>Conoce cuánta agua tienes antes de que se acabe.</h1>
-        <p class="hero__text">
-          AWITA ayuda a hogares y negocios a monitorear tinacos en tiempo real, revisar
-          historial de mediciones y recibir alertas cuando el nivel baja o un sensor deja
-          de reportar.
-        </p>
-        <div class="hero__actions">
-          <a class="button" href="#login">Comenzar ahora</a>
-          <a class="button button--secondary" href="#beneficios">Ver beneficios</a>
-        </div>
-      </div>
+  <div class="landing-page">
+    <header class="landing-header">
+      <span class="awita-logo landing-header__brand">AWITA</span>
+      <button class="button button--small" type="button" @click="openSignIn">
+        Iniciar sesión
+      </button>
+    </header>
 
-      <div class="hero-card" aria-label="Resumen del sistema AWITA">
-        <span class="hero-card__label">Tinaco principal</span>
-        <strong>75%</strong>
-        <div class="water-meter">
-          <span style="width: 75%"></span>
-        </div>
-        <p>825 L disponibles · actualizado hace 7 min</p>
-      </div>
-    </section>
-
-    <section id="beneficios" class="features">
-      <article class="feature-card">
-        <h2>Monitoreo simple</h2>
-        <p>Consulta litros disponibles, porcentaje del tinaco y última lectura desde web.</p>
-      </article>
-      <article class="feature-card">
-        <h2>Alertas pendientes</h2>
-        <p>Identifica niveles bajos o sensores sin conexión antes de que causen problemas.</p>
-      </article>
-      <article class="feature-card">
-        <h2>Historial reciente</h2>
-        <p>Revisa cómo cambia el consumo y detecta patrones de uso en tus tinacos.</p>
-      </article>
-    </section>
-
-    <section id="login" class="login-card">
-      <div>
-        <p class="eyebrow">Acceso</p>
-        <h2>Inicia sesión o crea tu cuenta</h2>
-        <p>Registra tus datos en el frontend, luego usa tu cuenta para acceder.</p>
-      </div>
-
-      <form class="login-form" @submit.prevent="onSubmit">
-        <div class="auth-toggle">
-          <button
-            type="button"
-            class="button button--ghost auth-toggle__button"
-            :class="{ 'auth-toggle__button--active': authMode === 'login' }"
-            @click="setMode('login')"
-          >
-            Iniciar sesión
-          </button>
-          <button
-            type="button"
-            class="button button--ghost auth-toggle__button"
-            :class="{ 'auth-toggle__button--active': authMode === 'register' }"
-            @click="setMode('register')"
-          >
-            Registrarse
-          </button>
-        </div>
-
-        <label for="email">Correo electrónico</label>
-        <input
-          id="email"
-          v-model="email"
-          type="email"
-          placeholder="tu@correo.com"
-          :class="{ 'input--error': fieldErrors.email }"
-        />
-        <p v-if="fieldErrors.email" class="error-message">{{ fieldErrors.email }}</p>
-
-        <div v-if="authMode === 'register'">
-          <label for="name">Nombre completo</label>
-          <input
-            id="name"
-            v-model="name"
-            type="text"
-            placeholder="Juan Pérez"
-            :class="{ 'input--error': fieldErrors.name }"
-          />
-          <p v-if="fieldErrors.name" class="error-message">{{ fieldErrors.name }}</p>
-        </div>
-
-        <p v-if="formError" class="error-message">{{ formError }}</p>
-        <p v-if="successMessage" class="success-message">{{ successMessage }}</p>
-
-        <div class="login-form__actions">
-          <button class="button" type="submit" :disabled="isLoading">
-            <span v-if="isLoading" class="loading-spinner"></span>
-            {{ authMode === 'login' ? 'Iniciar sesión' : 'Registrarme' }}
-          </button>
-          <button
-            v-if="authMode === 'register'"
-            class="button button--secondary"
-            type="button"
-            @click="setMode('login')"
-          >
-            Ir a iniciar sesión
-          </button>
-        </div>
-
-        <button class="button button--google" type="button" @click="loginWithGoogle" :disabled="isLoading">
-          <span v-if="isLoading" class="loading-spinner"></span>
-          Continuar con Google
+    <section class="landing-hero">
+      <h1 class="awita-logo landing-hero__title">AWITA</h1>
+      <p class="landing-hero__subtitle">
+        Monitorea el nivel y consumo de agua de tus tanques en tiempo real
+      </p>
+      <div class="landing-hero__actions">
+        <button class="button" type="button" @click="openSignUp">Comprar ahora</button>
+        <button class="button button--secondary" type="button" @click="scrollToDemo">
+          Ver demo
         </button>
-
-        <p class="field-hint">
-          {{ authMode === 'login'
-            ? 'Ingresa tu correo y presiona Iniciar sesión.'
-            : 'Ingresa tu correo y nombre para crear una cuenta.' }}
-        </p>
-      </form>
+      </div>
     </section>
 
-    <div v-if="googleModalOpen" class="modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="google-signin-title">
-      <div class="modal-card modal-card--wide">
-        <div class="modal-card__header">
-          <div>
-            <h2 id="google-signin-title">Iniciar sesión con Google</h2>
-            <p>Elige una cuenta o ingresa un correo @gmail.com válido.</p>
-          </div>
-          <button class="modal-close" type="button" @click="closeGoogleModal" aria-label="Cerrar">×</button>
-        </div>
-
-        <div class="modal-form">
-          <div class="google-account-list">
-            <label v-for="account in googleAccounts" :key="account" class="google-account-option">
-              <input
-                type="radio"
-                name="googleAccount"
-                :value="account"
-                v-model="selectedGoogleEmail"
-              />
-              <span>{{ account }}</span>
-            </label>
-          </div>
-
-          <div class="custom-google-field">
-            <label for="customGoogleEmail">Otro correo de Google</label>
-            <input
-              id="customGoogleEmail"
-              type="email"
-              v-model="customGoogleEmail"
-              placeholder="usuario@gmail.com"
-            />
-            <span class="field-hint">
-              Solo correos con dominio <strong>@gmail.com</strong>.
-            </span>
-          </div>
-
-          <p v-if="fieldErrors.google" class="error-message">{{ fieldErrors.google }}</p>
-
-          <div class="form-actions">
-            <button class="button" type="button" @click="confirmGoogleSignIn" :disabled="isLoading">
-              <span v-if="isLoading" class="loading-spinner"></span>
-              Continuar con Google
-            </button>
-            <button class="button button--secondary" type="button" @click="closeGoogleModal">
-              Cancelar
-            </button>
-          </div>
-        </div>
+    <div class="landing-tide" aria-hidden="true">
+      <div class="landing-tide__layer landing-tide__layer--deep">
+        <svg viewBox="0 0 1440 48" preserveAspectRatio="none">
+          <path
+            d="M0,26 C240,44 480,12 720,26 C960,40 1200,14 1440,26 L1440,48 L0,48 Z"
+            fill="currentColor"
+          />
+        </svg>
+      </div>
+      <div class="landing-tide__layer landing-tide__layer--mid">
+        <svg viewBox="0 0 1440 48" preserveAspectRatio="none">
+          <path
+            d="M0,30 C300,14 600,38 900,28 C1140,20 1320,34 1440,30 L1440,48 L0,48 Z"
+            fill="currentColor"
+          />
+        </svg>
+      </div>
+      <div class="landing-tide__layer landing-tide__layer--surface">
+        <svg viewBox="0 0 1440 48" preserveAspectRatio="none">
+          <path
+            d="M0,34 C360,48 720,22 1080,34 C1260,42 1380,30 1440,34 L1440,48 L0,48 Z"
+            fill="currentColor"
+          />
+        </svg>
       </div>
     </div>
-  </main>
-</template>
 
+    <section id="demo" class="landing-split">
+      <div class="landing-benefits">
+        <p class="eyebrow">Beneficios</p>
+        <h2>Todo lo que necesitas para cuidar tu agua</h2>
+        <ul class="landing-benefits__list">
+          <li v-for="benefit in benefits" :key="benefit.title" class="landing-benefits__item">
+            <h3>{{ benefit.title }}</h3>
+            <p>{{ benefit.description }}</p>
+          </li>
+        </ul>
+      </div>
+
+      <div class="landing-preview" aria-label="Vista previa del panel de control AWITA">
+        <div class="landing-preview__chrome">
+          <span></span>
+          <span></span>
+          <span></span>
+        </div>
+        <div class="landing-preview__body">
+          <aside class="landing-preview__sidebar">
+            <div class="landing-preview__brand">AWITA</div>
+            <div class="landing-preview__nav-item landing-preview__nav-item--active"></div>
+            <div class="landing-preview__nav-item"></div>
+            <div class="landing-preview__nav-item"></div>
+          </aside>
+          <div class="landing-preview__main">
+            <div class="landing-preview__stats">
+              <div class="landing-preview__stat">
+                <span>Nivel</span>
+                <strong>75%</strong>
+              </div>
+              <div class="landing-preview__stat">
+                <span>Disponible</span>
+                <strong>825 L</strong>
+              </div>
+              <div class="landing-preview__stat">
+                <span>Estado</span>
+                <strong>En línea</strong>
+              </div>
+            </div>
+            <div class="landing-preview__gauge">
+              <div class="landing-preview__gauge-bar">
+                <span style="width: 75%"></span>
+              </div>
+              <p>Tinaco principal · actualizado hace 7 min</p>
+            </div>
+            <div class="landing-preview__chart">
+              <div
+                v-for="n in 6"
+                :key="n"
+                class="landing-preview__bar"
+                :style="{ height: `${30 + n * 10}%` }"
+              />
+            </div>
+          </div>
+        </div>
+        <p class="landing-preview__caption">Vista previa del dashboard</p>
+      </div>
+    </section>
+
+    <footer class="landing-footer">
+      <span>AWITA 2026</span>
+      <a
+        class="landing-footer__github"
+        :href="githubUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        aria-label="Repositorio en GitHub"
+      >
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true">
+          <path
+            fill="currentColor"
+            d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.262.825-.585 0-.292-.015-1.26-.015-2.28-3.337.727-4.035-1.605-4.035-1.605-.546-1.387-1.335-1.755-1.335-1.755-1.09-.745.083-.73.083-.73 1.205.09 1.84 1.237 1.84 1.237 1.07 1.835 2.805 1.305 3.495.997.105-.775.42-1.305.765-1.605-2.67-.3-5.475-1.335-5.475-5.925 0-1.305.465-2.37 1.23-3.21-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.21 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.585A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12Z"
+          />
+        </svg>
+      </a>
+    </footer>
+  </div>
+</template>
