@@ -63,5 +63,14 @@ export async function apiFetch<T>(path: string, options: RequestInit = {}): Prom
     return undefined as T
   }
 
+  const contentType = response.headers.get('content-type') ?? ''
+  if (!contentType.includes('application/json')) {
+    const preview = (await response.text()).slice(0, 80)
+    throw new ApiError(
+      `La API devolvió HTML en lugar de JSON. Revisa VITE_API_BASE_URL (debe ser http://localhost:3000 o la URL del API, no la de MySQL). Respuesta: ${preview}…`,
+      response.status,
+    )
+  }
+
   return (await response.json()) as T
 }

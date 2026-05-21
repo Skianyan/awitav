@@ -1,13 +1,13 @@
 import { computed } from 'vue'
 import { defineStore } from 'pinia'
 import { useAuth, useUser } from '@clerk/vue'
-import type { UserResource } from '@clerk/types'
+import type { UserResource } from '@clerk/shared/types'
 
 import type { AuthProvider, User } from '@/types'
 
 function resolveProvider(clerkUser: UserResource): AuthProvider {
   const usesGoogle = clerkUser.externalAccounts.some(
-    (account) => account.provider === 'google',
+    (account: { provider: string }) => account.provider === 'google',
   )
   return usesGoogle ? 'google' : 'email'
 }
