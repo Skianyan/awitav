@@ -8,10 +8,12 @@
 import { computed, ref } from 'vue'
 import { defineStore } from 'pinia'
 
+import { env } from '@/config/env'
 import { sensorService } from '@/services/sensorService'
 import type {
   Notification,
   Reading,
+  ReadingTimeRange,
   RegisterSensorInput,
   Sensor,
   SensorAlertsInput,
@@ -87,13 +89,42 @@ export const useSensorsStore = defineStore('sensors', () => {
 
   async function clearReadNotifications() {
     await sensorService.clearReadNotifications()
-    notifications.value = await sensorService.getNotifications()
+
+    if (env.useMock) {
+      notifications.value = await sensorService.getNotifications()
+      return
+    }
+
+    notifications.value = notifications.value.filter((item) => !item.read)
   }
 
   function getSensorReadings(sensorId: string) {
     return readings.value
       .filter((reading) => reading.sensorId === sensorId)
-      .sort((first, second) => new Date(second.measuredAt).getTime() - new Date(first.measuredAt).getTime())
+      .sort((first, second) => new Date(first.measuredAt).getTime() - new Date(second.measuredAt).getTime())
+  }
+
+  async function loadSensorDetail(sensorId: string, timeRange: ReadingTimeRange = '24h') {
+    isLoading.value = true
+
+    try {
+      const sensor = await sensorService.getSensor(sensorId)
+      const sensorReadings = await sensorService.getSensorReadings(sensorId, timeRange)
+
+      const sensorIndex = sensors.value.findIndex((item) => item.id === sensorId)
+      if (sensorIndex >= 0) {
+        sensors.value[sensorIndex] = sensor
+      } else {
+        sensors.value = [sensor, ...sensors.value]
+      }
+
+      readings.value = [
+        ...readings.value.filter((reading) => reading.sensorId !== sensorId),
+        ...sensorReadings,
+      ]
+    } finally {
+      isLoading.value = false
+    }
   }
 
   return {
@@ -112,5 +143,6 @@ export const useSensorsStore = defineStore('sensors', () => {
     markAllNotificationsAsRead,
     clearReadNotifications,
     getSensorReadings,
+    loadSensorDetail,
   }
 })

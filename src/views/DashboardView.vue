@@ -12,8 +12,8 @@
  *
  * @component
  */
-import { computed } from 'vue'
-import { ref } from 'vue'
+import { computed, ref } from 'vue'
+import { RouterLink } from 'vue-router'
 
 import AuthenticatedLayout from '@/components/AuthenticatedLayout.vue'
 import WaterLevelGauge from '@/components/WaterLevelGauge.vue'
@@ -151,7 +151,12 @@ const xAxisLabels = computed(() => {
     </section>
 
     <section class="sensor-grid" aria-label="Sensores registrados">
-      <router-link v-for="sensor in sensorsStore.sensors" :key="sensor.id" :to="`/sensor/${sensor.id}`" class="sensor-card">
+      <RouterLink
+        v-for="sensor in sensorsStore.sensors"
+        :key="sensor.id"
+        :to="{ name: 'sensor-detail', params: { id: sensor.id } }"
+        class="sensor-card"
+      >
         <div class="sensor-card__header">
           <div>
             <span class="sensor-card__id">{{ sensor.id }}</span>
@@ -180,7 +185,7 @@ const xAxisLabels = computed(() => {
             <dd>{{ formatRelativeTime(sensor.lastReadingAt) }}</dd>
           </div>
         </dl>
-      </router-link>
+      </RouterLink>
     </section>
 
     <section class="panel">

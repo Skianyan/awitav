@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { computed, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
+import { RouterLink, useRoute, useRouter } from 'vue-router'
 
 import AppIcon from '@/components/AppIcon.vue'
 import AuthenticatedLayout from '@/components/AuthenticatedLayout.vue'
@@ -15,6 +16,8 @@ import type { Sensor } from '@/types'
 import { formatLiters, formatRelativeTime, getSensorStatusLabel } from '@/utils/format'
 
 const sensorsStore = useSensorsStore()
+const route = useRoute()
+const router = useRouter()
 const sensorIdPattern = `[A-Za-z0-9]{${SENSOR_ID_LENGTH}}`
 const sensorIdRegex = new RegExp(`^[A-Za-z0-9]{${SENSOR_ID_LENGTH}}$`)
 const isRegisterModalOpen = ref(false)
@@ -39,10 +42,20 @@ const alertsForm = reactive({
   disconnect: true,
   lowWater: true,
   lowWaterThresholdPercent: 25,
+  notificationMethod: 'EMAIL' as 'EMAIL' | 'SMS',
+  cooldownMinutes: 360,
 })
 
 const isLowWaterThresholdDisabled = computed(() => !alertsForm.lowWater)
+
 const canSaveAlerts = computed(() => {
+  const cooldown = Number(alertsForm.cooldownMinutes)
+  const cooldownValid = Number.isFinite(cooldown) && cooldown >= 1 && cooldown <= 1440
+
+  if (!cooldownValid) {
+    return false
+  }
+
   if (!alertsForm.lowWater) {
     return true
   }
@@ -88,7 +101,34 @@ const editAlerts = (sensor: Sensor) => {
   alertsForm.disconnect = sensor.alerts.disconnect
   alertsForm.lowWater = sensor.alerts.lowWater
   alertsForm.lowWaterThresholdPercent = sensor.alerts.lowWaterThresholdPercent
+  alertsForm.notificationMethod = sensor.alerts.notificationMethod
+  alertsForm.cooldownMinutes = sensor.alerts.cooldownMinutes
 }
+
+const openAlertsFromQuery = () => {
+  const alertaId = route.query.alerta
+
+  if (typeof alertaId !== 'string' || !alertaId) {
+    return
+  }
+
+  const sensor = sensorsStore.sensors.find((item) => item.id === alertaId.toUpperCase())
+
+  if (sensor) {
+    editAlerts(sensor)
+  }
+
+  void router.replace({ name: 'sensors' })
+}
+
+onMounted(() => {
+  if (!sensorsStore.sensors.length) {
+    void sensorsStore.loadDashboardData().then(openAlertsFromQuery)
+    return
+  }
+
+  openAlertsFromQuery()
+})
 
 const saveSettings = async () => {
   if (!editingSensorId.value) {
@@ -139,13 +179,20 @@ const saveAlerts = async () => {
     }
   }
 
-  await sensorsStore.updateSensorAlerts(alertSensorId.value, {
-    disconnect: alertsForm.disconnect,
-    lowWater: alertsForm.lowWater,
-    lowWaterThresholdPercent: Number(alertsForm.lowWaterThresholdPercent),
-  })
+  try {
+    await sensorsStore.updateSensorAlerts(alertSensorId.value, {
+      disconnect: alertsForm.disconnect,
+      lowWater: alertsForm.lowWater,
+      lowWaterThresholdPercent: Number(alertsForm.lowWaterThresholdPercent),
+      notificationMethod: alertsForm.notificationMethod,
+      cooldownMinutes: Number(alertsForm.cooldownMinutes),
+    })
 
-  alertSensorId.value = null
+    alertSensorId.value = null
+  } catch (error) {
+    alertsError.value =
+      error instanceof Error ? error.message : 'No se pudieron guardar las alertas.'
+  }
 }
 
 const closeRegisterModal = () => {
@@ -222,7 +269,11 @@ const confirmUnlink = async () => {
           <tbody>
             <tr v-for="sensor in sensorsStore.sensors" :key="sensor.id">
               <td>{{ sensor.id }}</td>
-              <td>{{ sensor.name }}</td>
+              <td>
+                <RouterLink class="sensor-table__link" :to="{ name: 'sensor-detail', params: { id: sensor.id } }">
+                  {{ sensor.name }}
+                </RouterLink>
+              </td>
               <td>
                 <span class="status-pill" :class="`status-pill--${sensor.status}`">
                   {{ getSensorStatusLabel(sensor.status) }}
@@ -436,6 +487,26 @@ const confirmUnlink = async () => {
                 max="100"
                 :disabled="isLowWaterThresholdDisabled"
               />
+            </label>
+
+            <label>
+              Método de notificación
+              <select v-model="alertsForm.notificationMethod">
+                <option value="EMAIL">Correo electrónico</option>
+                <option value="SMS">SMS</option>
+              </select>
+            </label>
+
+            <label>
+              Tiempo entre alertas repetidas (minutos)
+              <input
+                v-model.number="alertsForm.cooldownMinutes"
+                type="number"
+                required
+                min="1"
+                max="1440"
+              />
+              <span class="field-hint">Máximo 1440 min (24 horas). Evita notificaciones duplicadas.</span>
             </label>
 
             <p v-if="alertsError" class="form-error">{{ alertsError }}</p>

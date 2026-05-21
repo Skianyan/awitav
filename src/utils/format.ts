@@ -55,6 +55,25 @@ export const formatRelativeTime = (value: string) => {
  * @returns {string} Etiqueta del estado en español
  * @example getSensorStatusLabel("online") // "En línea"
  */
+export const formatCooldownMinutes = (minutes: number) => {
+  if (minutes < 60) {
+    return `${minutes} min`
+  }
+
+  const hours = Math.floor(minutes / 60)
+  const remainder = minutes % 60
+
+  if (remainder === 0) {
+    return `${hours} h`
+  }
+
+  return `${hours} h ${remainder} min`
+}
+
+export const formatNotificationMethod = (method: string) => {
+  return method === 'SMS' ? 'SMS' : 'Correo electrónico'
+}
+
 export const getSensorStatusLabel = (status: string) => {
   const labels: Record<string, string> = {
     online: 'En línea',

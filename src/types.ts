@@ -20,6 +20,9 @@ export interface User {
 /** Estado posible de un sensor */
 export type SensorStatus = 'online' | 'warning' | 'offline'
 
+/** Rango temporal para historial de lecturas */
+export type ReadingTimeRange = '24h' | '7d' | '30d'
+
 /**
  * Representa un sensor de tinaco
  */
@@ -66,6 +69,9 @@ export interface RegisterSensorInput {
   id: string
 }
 
+/** Canal de notificación para alertas del sensor */
+export type NotificationMethod = 'EMAIL' | 'SMS'
+
 /**
  * Configuración de alertas para un sensor
  */
@@ -73,6 +79,8 @@ export interface SensorAlertSettings {
   disconnect: boolean
   lowWater: boolean
   lowWaterThresholdPercent: number
+  notificationMethod: NotificationMethod
+  cooldownMinutes: number
 }
 
 export interface SensorSettingsInput {
@@ -87,4 +95,6 @@ export interface SensorAlertsInput {
   disconnect: boolean
   lowWater: boolean
   lowWaterThresholdPercent: number
+  notificationMethod: NotificationMethod
+  cooldownMinutes: number
 }

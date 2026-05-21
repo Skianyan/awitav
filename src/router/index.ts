@@ -4,6 +4,7 @@ import { useAuthStore } from '@/stores/auth'
 import DashboardView from '@/views/DashboardView.vue'
 import LandingView from '@/views/LandingView.vue'
 import NotificationsView from '@/views/NotificationsView.vue'
+import SensorDetailView from '@/views/SensorDetailView.vue'
 import SensorsView from '@/views/SensorsView.vue'
 
 const router = createRouter({
@@ -24,6 +25,11 @@ const router = createRouter({
       path: '/sensores',
       name: 'sensors',
       component: SensorsView,
+    },
+    {
+      path: '/sensor/:id',
+      name: 'sensor-detail',
+      component: SensorDetailView,
     },
     {
       path: '/notificaciones',
