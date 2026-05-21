@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { useClerk } from '@clerk/vue'
+import { SignInButton, SignUpButton } from '@clerk/vue'
 
-const clerk = useClerk()
 const githubUrl = 'https://github.com/Skianyan/awitav'
 
 const benefits = [
@@ -23,14 +22,6 @@ const benefits = [
   },
 ]
 
-const openSignIn = () => {
-  clerk.value?.openSignIn()
-}
-
-const openSignUp = () => {
-  clerk.value?.openSignUp()
-}
-
 const scrollToDemo = () => {
   document.getElementById('demo')?.scrollIntoView({ behavior: 'smooth' })
 }
@@ -40,9 +31,9 @@ const scrollToDemo = () => {
   <div class="landing-page">
     <header class="landing-header">
       <span class="awita-logo landing-header__brand">AWITA</span>
-      <button class="button button--small" type="button" @click="openSignIn">
-        Iniciar sesión
-      </button>
+      <SignInButton mode="modal">
+        <button class="button button--small" type="button">Iniciar sesión</button>
+      </SignInButton>
     </header>
 
     <section class="landing-hero">
@@ -51,7 +42,9 @@ const scrollToDemo = () => {
         Monitorea el nivel y consumo de agua de tus tanques en tiempo real
       </p>
       <div class="landing-hero__actions">
-        <button class="button" type="button" @click="openSignUp">Comprar ahora</button>
+        <SignUpButton mode="modal">
+          <button class="button" type="button">Comprar ahora</button>
+        </SignUpButton>
         <button class="button button--secondary" type="button" @click="scrollToDemo">
           Ver demo
         </button>
