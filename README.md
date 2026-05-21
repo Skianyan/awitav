@@ -1,6 +1,6 @@
 # AWITAV
 
-Frontend web para monitorear niveles de agua en tinacos. Forma parte del monorepo **awitafull** junto con el API NestJS (`awita-back`) y el firmware de dispositivos (`awita-arduino`).
+Frontend web para monitorear niveles de agua en tinacos. Forma parte de un proyecto junto con el API NestJS (`awita-back`) y el firmware de dispositivos (`awita-arduino`).
 
 ## Stack
 
@@ -13,13 +13,13 @@ Frontend web para monitorear niveles de agua en tinacos. Forma parte del monorep
 
 ## Funcionalidades
 
-| Ruta | Descripción |
-|------|-------------|
-| `/` | Landing pública con inicio de sesión y registro (modales Clerk) |
-| `/dashboard` | Resumen de sensores y acceso rápido al detalle |
-| `/sensores` | Listado, registro, desvinculación y configuración de alertas |
-| `/sensor/:id` | Detalle del sensor, gráfica de historial y enlace a alertas |
-| `/notificaciones` | Bandeja de alertas (nivel bajo, desconexión) |
+| Ruta              | Descripción                                                     |
+| ----------------- | --------------------------------------------------------------- |
+| `/`               | Landing pública con inicio de sesión y registro (modales Clerk) |
+| `/dashboard`      | Resumen de sensores y acceso rápido al detalle                  |
+| `/sensores`       | Listado, registro, desvinculación y configuración de alertas    |
+| `/sensor/:id`     | Detalle del sensor, gráfica de historial y enlace a alertas     |
+| `/notificaciones` | Bandeja de alertas (nivel bajo, desconexión)                    |
 
 Desde la app puedes:
 
@@ -50,11 +50,11 @@ VITE_CLERK_PUBLISHABLE_KEY=pk_test_...
 VITE_USE_MOCK=false
 ```
 
-| Variable | Descripción |
-|----------|-------------|
-| `VITE_API_BASE_URL` | URL base del API (sin barra final). Ej.: `http://localhost:3000` |
-| `VITE_CLERK_PUBLISHABLE_KEY` | Clave publicable de Clerk |
-| `VITE_USE_MOCK` | `true` = datos locales de prueba; `false` = API real |
+| Variable                     | Descripción                                                      |
+| ---------------------------- | ---------------------------------------------------------------- |
+| `VITE_API_BASE_URL`          | URL base del API (sin barra final). Ej.: `http://localhost:3000` |
+| `VITE_CLERK_PUBLISHABLE_KEY` | Clave publicable de Clerk                                        |
+| `VITE_USE_MOCK`              | `true` = datos locales de prueba; `false` = API real             |
 
 3. En Clerk, configurar URLs de redirección tras login/registro hacia `/dashboard` (ya definidas en `src/main.ts`).
 
@@ -87,11 +87,11 @@ No hace falta `VITE_API_BASE_URL` en ese caso. Los datos provienen de `src/servi
 
 ## Scripts
 
-| Comando | Uso |
-|---------|-----|
-| `npm run dev` | Servidor de desarrollo |
-| `npm run build` | Compilación de producción (`vue-tsc` + Vite) |
-| `npm run preview` | Vista previa del build |
+| Comando           | Uso                                          |
+| ----------------- | -------------------------------------------- |
+| `npm run dev`     | Servidor de desarrollo                       |
+| `npm run build`   | Compilación de producción (`vue-tsc` + Vite) |
+| `npm run preview` | Vista previa del build                       |
 
 ## Integración con el API
 
@@ -123,14 +123,8 @@ src/
 
 ## Monorepo
 
-| Carpeta | Rol |
-|---------|-----|
-| `awitav/` | Este frontend |
-| `awita-back/` | API NestJS, Prisma, MySQL |
-| `awita-arduino/` | Firmware ESP8266/ESP32 |
-
-## Notas
-
-- El backend usa **MySQL**, no PostgreSQL.
-- Tras registrar un sensor en la app, el ID debe coincidir con el que devolvió el dispositivo al provisionarse (`POST /sensors/device` en el backend).
-- Swagger del API (local): `http://localhost:3000/api`
+| Carpeta          | Rol                       |
+| ---------------- | ------------------------- |
+| `awitav/`        | Este frontend             |
+| `awita-back/`    | API NestJS, Prisma, MySQL |
+| `awita-arduino/` | Firmware ESP8266/ESP32    |
