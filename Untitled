@@ -1,0 +1,11 @@
+Access to fetch at 'https://p1rxyk3hn8.execute-api.us-west-1.amazonaws.com/dev/sensors' from origin 'https://awitav-3it9-skianyans-projects.vercel.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+p1rxyk3hn8.execute-api.us-west-1.amazonaws.com/dev/sensors:1  Failed to load resource: net::ERR_FAILED
+dashboard:1 Access to fetch at 'https://p1rxyk3hn8.execute-api.us-west-1.amazonaws.com/dev/sensors' from origin 'https://awitav-3it9-skianyans-projects.vercel.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+p1rxyk3hn8.execute-api.us-west-1.amazonaws.com/dev/sensors:1  Failed to load resource: net::ERR_FAILED
+index-Bh_-lV5p.js:1   Uncaught (in promise) TypeError: Failed to fetch
+    at Zf (index-Bh_-lV5p.js:1:139119)
+    at async Object.getSensors (index-Bh_-lV5p.js:1:141261)
+    at async Promise.all (index 0)
+    at async Proxy.s (index-Bh_-lV5p.js:1:148124)
+dashboard:1 Access to fetch at 'https://p1rxyk3hn8.execute-api.us-west-1.amazonaws.com/dev/notifications' from origin 'https://awitav-3it9-skianyans-projects.vercel.app' has been blocked by CORS policy: Response to preflight request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present on the requested resource.
+p1rxyk3hn8.execute-api.us-west-1.amazonaws.com/dev/notifications:1  Failed to load resource: net::ERR_FAILED
